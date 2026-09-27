@@ -1,0 +1,49 @@
+<!-- @dsCard group="Estructura" height=420 subtitle="Grilla filtrable de videos/trabajos" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WorksGrid — preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; }
+  body { background: var(--surface-950); padding: var(--space-8); box-sizing: border-box; }
+  .filters { display: flex; gap: var(--space-6); margin-bottom: var(--space-6); }
+  .filters span {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ash-500); padding-bottom: var(--space-1); border-bottom: 1px solid transparent;
+  }
+  .filters span.active { color: var(--bone-100); border-color: var(--wine-400); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+  .card {
+    position: relative; aspect-ratio: 4/5; background: var(--surface-800);
+    border: 1px solid var(--line); overflow: hidden;
+  }
+  .card .glow {
+    position:absolute; inset:0;
+    background: radial-gradient(120% 90% at 30% 20%, var(--wine-900) 0%, var(--surface-800) 70%);
+  }
+  .card .label {
+    position: absolute; left: var(--space-3); bottom: var(--space-3); right: var(--space-3);
+    font-family: var(--font-display); font-size: 22px; color: var(--bone-100); line-height: 1;
+  }
+  .card .tag {
+    position: absolute; top: var(--space-3); left: var(--space-3);
+    font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ash-300);
+  }
+</style>
+</head>
+<body>
+<div class="filters">
+  <span class="active">Todos</span><span>Videos</span><span>Sesiones</span><span>Portadas</span>
+</div>
+<div class="grid">
+  <div class="card"><div class="glow"></div><div class="tag">Video</div><div class="label">ASCENSIÓN</div></div>
+  <div class="card"><div class="glow"></div><div class="tag">Sesión</div><div class="label">VINO Y HUMO</div></div>
+  <div class="card"><div class="glow"></div><div class="tag">Portada</div><div class="label">CALLE OSCURA</div></div>
+</div>
+</body>
+</html>

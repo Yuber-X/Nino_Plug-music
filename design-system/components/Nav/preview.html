@@ -1,0 +1,47 @@
+<!-- @dsCard group="Estructura" height=96 subtitle="Barra fija, transparente sobre el hero" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Nav — preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; }
+  body { background: var(--surface-950); }
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 96px; padding: 0 var(--space-8);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { font-family: var(--font-mono); font-weight: 700; font-size: 14px; letter-spacing: .14em; color: var(--bone-100); }
+  .brand .dot { color: var(--wine-400); }
+  .links { display: flex; gap: var(--space-8); list-style: none; margin:0; padding:0; }
+  .links a {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em;
+    color: var(--ash-300); text-decoration: none; text-transform: uppercase;
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid transparent;
+  }
+  .links a.active { color: var(--bone-100); border-color: var(--wine-400); }
+  .cta {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--bone-100); background: var(--wine-700); padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-none);
+  }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="brand">NINO<span class="dot">·</span>PLUG</div>
+  <ul class="links">
+    <li><a href="#" class="active">Inicio</a></li>
+    <li><a href="#">Música</a></li>
+    <li><a href="#">Videos</a></li>
+    <li><a href="#">Sobre</a></li>
+  </ul>
+  <div class="cta">Escuchar ahora</div>
+</nav>
+</body>
+</html>

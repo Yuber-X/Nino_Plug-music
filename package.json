@@ -1,0 +1,21 @@
+{
+  "name": "nino-plug",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Portafolio musical de Skinny Xander — Niño Plug",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "dev:api": "npm run start:dev --workspace apps/api",
+    "build": "npm run build --workspace apps/web",
+    "build:api": "npm run build --workspace apps/api",
+    "lint": "npm run lint --workspace apps/web",
+    "preview": "npm run preview --workspace apps/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

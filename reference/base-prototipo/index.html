@@ -1,0 +1,712 @@
+<title>Nino Plug</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --surface-950:#0a0908; --surface-900:#121011; --surface-800:#1c1917; --surface-700:#2b2624;
+    --line:#3a3330; --line-strong:#655e58;
+    --ash-500:#7a736c; --ash-300:#a89f97; --bone-100:#f4efe8;
+    --wine-900:#2e0910; --wine-700:#5c1220; --wine-500:#86192c; --wine-400:#c23a52;
+    --font-display:'Anton','Arial Narrow',sans-serif;
+    --font-body:'IBM Plex Sans','Segoe UI',sans-serif;
+    --font-mono:'IBM Plex Mono','SFMono-Regular',monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--surface-950);
+    color:var(--bone-100);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3{margin:0;text-wrap:balance;}
+  p{margin:0;}
+  a{color:inherit;}
+  ::selection{background:var(--wine-700);color:var(--bone-100);}
+
+  /* film grain, whole page */
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:999; pointer-events:none;
+    opacity:.05;
+    mix-blend-mode:overlay;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%25" height="100%25" filter="url(%23n)"/></svg>');
+  }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding-inline:24px; }
+  @media(min-width:640px){ .wrap{ padding-inline:48px; } }
+
+  /* ---------- chrome title (hero) ---------- */
+  .chrome-title{
+    margin:0; font-family:var(--font-display); font-weight:400;
+    letter-spacing:.01em;
+    background:
+      radial-gradient(circle at var(--mx,50%) var(--my,32%), rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 40%),
+      linear-gradient(115deg,#0c0c0c 0%,#f3f3f3 14%,#8a8a8a 27%,#ffffff 39%,#3a3a3a 53%,#d2d2d2 66%,#121212 80%,#eaeaea 93%,#101010 100%);
+    background-blend-mode:screen, normal;
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    /* layered extrusion: gives the letterforms real slab thickness, independent of the mouse-driven cast shadow below */
+    text-shadow:
+      1px 1px 0 #6b6b6b, 2px 2px 0 #616161, 3px 3px 0 #575757, 4px 4px 0 #4d4d4d,
+      5px 5px 0 #434343, 6px 6px 0 #393939, 7px 7px 0 #2f2f2f, 8px 8px 0 #252525,
+      9px 9px 0 #1b1b1b, 10px 10px 0 #111111;
+    filter:drop-shadow(var(--sx,0px) var(--sy,14px) 24px rgba(0,0,0,.6)) drop-shadow(0 2px 0 rgba(0,0,0,.5));
+    transform-style:preserve-3d;
+    transition:filter .15s ease;
+    will-change:transform, filter, background-position;
+  }
+  .hero h1.chrome-title{
+    opacity:0;
+    transform:scale(.55) rotateY(0deg);
+  }
+  .hero h1.chrome-title.spin-play{
+    animation:chromeSpin 1.9s cubic-bezier(.22,.7,.25,1) forwards;
+  }
+  .hero h1.chrome-title.settled{
+    opacity:1;
+    transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(1);
+  }
+  @keyframes chromeSpin{
+    0%{ opacity:0; transform:scale(.55) rotateY(0deg); }
+    40%{ opacity:1; }
+    100%{ opacity:1; transform:scale(1) rotateY(360deg); }
+  }
+  .sparkle{
+    position:absolute; color:#fff; line-height:1; pointer-events:none;
+    text-shadow:0 0 8px rgba(255,255,255,.95), 0 0 20px rgba(255,255,255,.55);
+    animation:twinkle 2.6s ease-in-out infinite;
+  }
+  @keyframes twinkle{ 0%,100%{ opacity:.15; transform:scale(.7); } 50%{ opacity:1; transform:scale(1); } }
+
+  /* ---------- intro: album / vinyl reveal ---------- */
+  #intro{
+    position:fixed; inset:0; z-index:1000;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--surface-950);
+    transition:opacity .6s ease, visibility .6s ease;
+    perspective:1200px;
+  }
+  #intro.hide{ opacity:0; visibility:hidden; pointer-events:none; }
+  .intro-hint{
+    position:absolute; z-index:1;
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ash-300); white-space:nowrap;
+    transition:opacity .3s ease;
+  }
+  .intro-hint.leaving{ opacity:0; }
+  .intro-row{ display:flex; align-items:center; gap:56px; }
+  .stage-hover{ position:relative; padding:64px; }
+  .record-stage{
+    position:relative; width:min(52vw,280px); aspect-ratio:1;
+    background:none; border:none; padding:0; cursor:pointer;
+    transform:scale(.84); transition:transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .record-stage.near{ transform:scale(1); }
+  .vinyl{
+    position:absolute; inset:0; border-radius:50%;
+    background:radial-gradient(circle at 34% 30%, #2b2926, #050505 68%);
+    border:1px solid rgba(244,239,232,.14);
+    display:flex; align-items:center; justify-content:center;
+    transform:translateX(0%);
+    transition:transform .6s cubic-bezier(.2,.8,.2,1), opacity .6s ease;
+  }
+  .record-stage.near .vinyl{ transform:translateX(38%); }
+  .record-stage.leaving .vinyl{ transform:translateX(160%); opacity:0; }
+  .vinyl::before{
+    content:""; position:absolute; inset:10%; border-radius:50%;
+    border:1px solid rgba(244,239,232,.06);
+  }
+  .vinyl-label{
+    width:30%; height:30%; border-radius:50%; background:var(--wine-700);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.06em; color:var(--bone-100);
+  }
+  .album{
+    position:absolute; inset:0; overflow:hidden;
+    background:var(--surface-800); border:1px solid var(--line);
+    display:flex; flex-direction:column; justify-content:flex-end;
+    transition:transform .7s cubic-bezier(.6,0,.2,1), opacity .7s ease;
+  }
+  .record-stage.leaving .album{ transform:translateX(-160%); opacity:0; }
+  .album-art{ position:absolute; inset:0; }
+  .album-art .door{ position:absolute; left:50%; top:32%; width:22%; height:52%; transform:translateX(-50%); background:linear-gradient(180deg,#fff,#cfcfcf); filter:blur(.5px); box-shadow:0 0 60px 10px rgba(255,255,255,.35); }
+  .album-art .figure{ position:absolute; left:50%; bottom:14%; width:8%; height:20%; transform:translateX(-50%); background:var(--surface-950); border-radius:3px 3px 0 0; }
+  .album-art .steps{ position:absolute; left:38%; right:38%; bottom:0; height:16%; background:repeating-linear-gradient(0deg, var(--surface-700) 0 2px, transparent 2px 6px); opacity:.5; }
+  .album-art .glow{ position:absolute; inset:0; background:radial-gradient(60% 50% at 50% 55%, var(--wine-900) 0%, transparent 70%); }
+  .album-meta{ position:relative; z-index:1; padding:14px; background:linear-gradient(0deg, rgba(10,9,8,.75), transparent); }
+  .album-title{ display:block; font-family:var(--font-display); font-size:20px; color:var(--bone-100); }
+  .album-artist{ display:block; font-family:var(--font-mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--ash-300); margin-top:2px; }
+
+  /* ---------- nav ---------- */
+  .nav{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 24px;
+    background:transparent;
+    border-bottom:1px solid transparent;
+    transition:background .3s ease, border-color .3s ease, padding .3s ease;
+  }
+  @media(min-width:640px){ .nav{ padding:24px 48px; } }
+  .nav.solid{ background:rgba(10,9,8,.86); backdrop-filter:blur(6px); border-color:var(--line); padding-block:14px; }
+  .brand{ font-family:var(--font-mono); font-weight:700; font-size:13px; letter-spacing:.14em; }
+  .brand .dot{ color:var(--wine-400); }
+  .nav-links{ display:none; list-style:none; margin:0; padding:0; gap:32px; }
+  @media(min-width:800px){ .nav-links{ display:flex; } }
+  .nav-links a{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+    text-decoration:none; color:var(--ash-300); padding-bottom:4px; border-bottom:1px solid transparent;
+    transition:color .2s ease, border-color .2s ease;
+  }
+  .nav-links a:hover, .nav-links a.active{ color:var(--bone-100); border-color:var(--wine-400); }
+  .nav-cta{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--bone-100); background:var(--wine-700); padding:10px 18px; text-decoration:none;
+    border:1px solid var(--wine-700); transition:background .2s ease, border-color .2s ease;
+  }
+  .nav-cta:hover{ background:var(--wine-500); border-color:var(--wine-500); }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    min-height:100svh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding:150px 24px 96px;
+    background:
+      radial-gradient(90% 60% at var(--mx,50%) var(--my,38%), var(--wine-900) 0%, transparent 60%),
+      var(--surface-950);
+    overflow:hidden;
+  }
+  @media(min-width:640px){ .hero{ padding:160px 48px 110px; } }
+  .kicker{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--wine-400); margin-bottom:20px;
+  }
+  .title-stage{ position:relative; perspective:1000px; max-width:920px; margin-bottom:-.06em; display:inline-block; }
+  .hero h1{
+    font-size:clamp(56px,13vw,148px); line-height:.88;
+    max-width:920px;
+  }
+  .hero .sub{
+    font-family:var(--font-body); font-size:clamp(16px,2vw,20px); line-height:1.55;
+    color:var(--ash-300); max-width:520px; margin:20px auto 0;
+  }
+  .hero-actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:16px; margin-top:36px; }
+  .btn{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    padding:14px 26px; border:1px solid transparent; cursor:pointer; text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+    transition:background .2s ease, color .2s ease, border-color .2s ease, transform .15s ease;
+  }
+  .btn:active{ transform:scale(.97); }
+  .btn-primary{ background:var(--wine-700); color:var(--bone-100); }
+  .btn-primary:hover{ background:var(--wine-500); }
+  .btn-ghost{ background:transparent; color:var(--bone-100); border-color:var(--line-strong); }
+  .btn-ghost:hover{ border-color:var(--wine-400); color:var(--wine-400); }
+  .scroll-cue{
+    position:absolute; right:24px; bottom:40px;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ash-500);
+  }
+  @media(min-width:640px){ .scroll-cue{ right:48px; } }
+  .scroll-cue .line{ width:1px; height:40px; background:var(--line-strong); overflow:hidden; position:relative; }
+  .scroll-cue .line::after{
+    content:""; position:absolute; left:0; top:-100%; width:100%; height:100%; background:var(--wine-400);
+    animation:scrollcue 1.8s ease-in-out infinite;
+  }
+  @keyframes scrollcue{ to{ top:100%; } }
+
+  /* ---------- sections ---------- */
+  section{ padding:96px 0; border-bottom:1px solid var(--line); }
+  section:last-of-type{ border-bottom:none; }
+  .section-head{ display:flex; align-items:baseline; justify-content:space-between; gap:24px; margin-bottom:48px; flex-wrap:wrap; }
+  .eyebrow{ font-family:var(--font-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--wine-400); }
+  .section-title{ font-family:var(--font-display); font-size:clamp(32px,5vw,56px); line-height:1; margin-top:12px; }
+
+  .reveal{ opacity:0; transform:translateY(24px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in{ opacity:1; transform:none; }
+  .no-js .reveal, .reduced-motion .reveal{ opacity:1; transform:none; }
+
+  /* ---------- player / tracklist ---------- */
+  .player-section{ background:var(--surface-900); }
+  .tracklist{ max-width:720px; border-top:1px solid var(--line); }
+  .track{
+    display:grid; grid-template-columns:32px 1fr auto 40px; align-items:center; gap:16px;
+    padding:18px 12px; border-bottom:1px solid var(--line);
+    background:transparent; cursor:pointer; text-align:left; width:100%;
+    font-family:inherit; color:inherit; border-left:0 solid transparent;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .track:hover{ background:var(--surface-800); }
+  .track.active{ background:var(--wine-700); border-color:var(--wine-700); }
+  .t-idx{ font-family:var(--font-mono); font-size:13px; color:var(--ash-500); }
+  .track.active .t-idx{ color:var(--bone-100); }
+  .t-meta .t-name{ font-family:var(--font-body); font-size:16px; font-weight:600; }
+  .t-meta .t-feat{ font-family:var(--font-body); font-size:13px; color:var(--ash-300); margin-top:2px; }
+  .track.active .t-meta .t-feat{ color:var(--bone-100); opacity:.82; }
+  .t-time{ font-family:var(--font-mono); font-size:13px; letter-spacing:.03em; color:var(--ash-500); font-variant-numeric:tabular-nums; display:flex; align-items:center; justify-content:flex-end; gap:8px; }
+  .track.active .t-time{ color:var(--bone-100); }
+  .t-play{
+    width:28px; height:28px; border-radius:999px; border:1px solid var(--line-strong);
+    display:flex; align-items:center; justify-content:center; color:var(--bone-100); font-size:0;
+    position:relative;
+  }
+  .track.active .t-play{ background:var(--bone-100); border-color:var(--bone-100); }
+  .t-play::before{ content:""; width:0; height:0; border-style:solid; border-width:5px 0 5px 8px; border-color:transparent transparent transparent var(--bone-100); margin-left:2px; }
+  .track.active .t-play::before{ border-width:0; width:8px; height:8px; background:var(--wine-700); border-radius:1px; margin:0; }
+  .eq{ display:flex; align-items:flex-end; gap:2px; height:14px; margin-left:6px; }
+  .eq span{ width:2px; background:var(--bone-100); opacity:.9; animation:eqbounce 1s ease-in-out infinite; }
+  .eq span:nth-child(1){ height:40%; animation-delay:-.6s; }
+  .eq span:nth-child(2){ height:100%; animation-delay:-.3s; }
+  .eq span:nth-child(3){ height:65%; animation-delay:-.9s; }
+  @keyframes eqbounce{ 0%,100%{ transform:scaleY(.4); } 50%{ transform:scaleY(1); } }
+
+  /* ---------- works grid ---------- */
+  .filters{ display:flex; gap:28px; flex-wrap:wrap; }
+  .filter{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ash-500); background:none; border:none; padding:0 0 4px; cursor:pointer;
+    border-bottom:1px solid transparent; transition:color .2s ease, border-color .2s ease;
+  }
+  .filter:hover{ color:var(--bone-100); }
+  .filter.active{ color:var(--bone-100); border-color:var(--wine-400); }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin-top:40px; }
+  .card{
+    position:relative; aspect-ratio:4/5; background:var(--surface-800); border:1px solid var(--line);
+    overflow:hidden; transition:opacity .35s ease, transform .35s ease, border-color .25s ease;
+  }
+  .card.hidden{ display:none; }
+  .card:hover{ border-color:var(--line-strong); }
+  .card .glow{
+    position:absolute; inset:0; transition:transform .5s ease;
+    background:radial-gradient(120% 90% at var(--gx,30%) var(--gy,20%), var(--wine-900) 0%, var(--surface-800) 70%);
+  }
+  .card:hover .glow{ transform:scale(1.08); }
+  .card .tag{
+    position:absolute; top:14px; left:14px; font-family:var(--font-mono); font-size:10px;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--ash-300);
+  }
+  .card .label{
+    position:absolute; left:14px; right:14px; bottom:14px;
+    font-family:var(--font-display); font-size:24px; line-height:1; color:var(--bone-100);
+  }
+
+  /* ---------- bio ---------- */
+  .bio-grid{ display:grid; grid-template-columns:1fr; gap:40px; }
+  @media(min-width:800px){ .bio-grid{ grid-template-columns:1.1fr .9fr; gap:64px; } }
+  .bio-text p{ font-family:var(--font-body); font-size:18px; line-height:1.7; color:var(--ash-300); max-width:60ch; }
+  .bio-text p + p{ margin-top:20px; }
+  .bio-text strong{ color:var(--bone-100); font-weight:600; }
+  .stat-row{ display:flex; gap:40px; margin-top:40px; flex-wrap:wrap; }
+  .stat b{ display:block; font-family:var(--font-display); font-size:40px; color:var(--wine-400); line-height:1; }
+  .stat span{ display:block; font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ash-500); margin-top:8px; }
+  .press-list{ display:flex; flex-direction:column; gap:0; border-top:1px solid var(--line); }
+  .press-list li{ list-style:none; padding:16px 0; border-bottom:1px solid var(--line); font-family:var(--font-mono); font-size:13px; color:var(--ash-300); display:flex; justify-content:space-between; gap:16px; }
+  .press-list li b{ color:var(--bone-100); font-weight:600; }
+
+  /* ---------- footer ---------- */
+  footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-inset-bottom,0px)); }
+  .footer-top{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:32px; align-items:flex-start; }
+  .footer-name{ font-family:var(--font-display); font-size:clamp(40px,7vw,72px); line-height:.9; }
+  .footer-links{ display:flex; gap:28px; flex-wrap:wrap; }
+  .footer-links a{ font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; text-decoration:none; color:var(--ash-300); border-bottom:1px solid transparent; }
+  .footer-links a:hover{ color:var(--bone-100); border-color:var(--wine-400); }
+  .footer-bottom{ margin-top:56px; padding-top:24px; border-top:1px solid var(--line); display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; font-family:var(--font-mono); font-size:11px; letter-spacing:.05em; color:var(--ash-500); }
+
+  /* ---------- mini player ---------- */
+  .mini-player{
+    position:fixed; left:14px; bottom:14px; z-index:90;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(10,9,8,.72); backdrop-filter:blur(6px);
+    border:1px solid var(--line);
+    padding:8px 12px 8px 8px;
+    width:198px;
+    transform:translateX(-130%); transition:transform .4s ease, opacity .4s ease;
+    box-shadow:0 12px 32px -16px rgba(0,0,0,.6);
+  }
+  .mini-player.show{ transform:translateX(0); }
+  .mini-player .mp-play{
+    width:24px; height:24px; flex:none; border-radius:999px; background:var(--surface-700); border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;
+  }
+  .mini-player .mp-play::before{ content:""; width:0; height:0; border-style:solid; border-width:5px 0 5px 7px; border-color:transparent transparent transparent var(--ash-300); margin-left:1px; }
+  .mini-player .mp-play.playing::before{ border-width:0; width:7px; height:7px; background:var(--ash-300); border-radius:1px; margin:0; }
+  .mp-info{ flex:1; min-width:0; }
+  .mp-info .mp-name{ font-family:var(--font-body); font-size:11px; font-weight:600; color:var(--ash-300); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mp-bar{ position:relative; height:2px; background:var(--line); margin-top:6px; }
+  .mp-bar i{ position:absolute; left:0; top:0; height:100%; width:22%; background:var(--wine-700); }
+  .mp-time{ font-family:var(--font-mono); font-size:10px; color:var(--ash-500); flex:none; font-variant-numeric:tabular-nums; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  }
+</style>
+
+<div id="intro">
+  <div class="intro-row">
+    <div class="stage-hover" id="stageHover">
+      <button class="record-stage" id="recordStage" aria-label="Entrar al sitio y reproducir">
+        <div class="vinyl" aria-hidden="true"><div class="vinyl-label">NP</div></div>
+        <div class="album" aria-hidden="true">
+          <div class="album-art">
+            <div class="glow"></div>
+            <div class="door"></div>
+            <div class="figure"></div>
+            <div class="steps"></div>
+          </div>
+          <div class="album-meta">
+            <span class="album-title">ASCENSIÓN</span>
+            <span class="album-artist">Nino Plug</span>
+          </div>
+        </div>
+      </button>
+    </div>
+    <div class="intro-hint" id="introHint">Click para<br>entrar</div>
+  </div>
+</div>
+
+<header class="nav" id="siteNav">
+  <div class="brand">NINO<span class="dot">·</span>PLUG</div>
+  <ul class="nav-links">
+    <li><a href="#inicio" class="active" data-nav>Inicio</a></li>
+    <li><a href="#musica" data-nav>Música</a></li>
+    <li><a href="#videos" data-nav>Videos</a></li>
+    <li><a href="#sobre" data-nav>Sobre</a></li>
+  </ul>
+  <a class="nav-cta" href="#musica">Escuchar ahora</a>
+</header>
+
+<main>
+  <section class="hero" id="hero">
+    <div class="kicker">Nuevo sencillo · 2026</div>
+    <div class="title-stage" id="titleStage">
+      <h1 class="chrome-title" id="heroTitle">ASCENSIÓN</h1>
+      <span class="sparkle" style="top:6%; left:2%; font-size:22px;">✦</span>
+      <span class="sparkle" style="bottom:10%; right:4%; font-size:15px; animation-delay:1.3s;">✦</span>
+    </div>
+    <p class="sub">Producción y dirección visual del próximo capítulo de Nino Plug. Dembow crudo, visuales oscuros, sin filtro.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#musica">▶ Reproducir ahora</a>
+      <a class="btn btn-ghost" href="#videos">Ver videos</a>
+    </div>
+    <div class="scroll-cue"><span>Scroll</span><span class="line"></span></div>
+  </section>
+
+  <section class="player-section" id="musica">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow">Discografía</div>
+          <h2 class="section-title">En reproducción</h2>
+        </div>
+      </div>
+      <div class="tracklist reveal">
+        <button class="track active" data-track="0" data-name="ASCENSIÓN" data-feat="feat. DJ Kane">
+          <span class="t-idx">01</span>
+          <span class="t-meta"><span class="t-name">ASCENSIÓN</span><span class="t-feat">feat. DJ Kane · Reproduciendo ahora</span></span>
+          <span class="t-time">00:42 / 03:15</span>
+          <span class="t-play" aria-hidden="true"></span>
+        </button>
+        <button class="track" data-track="1" data-name="CALLE OSCURA" data-feat="Sencillo">
+          <span class="t-idx">02</span>
+          <span class="t-meta"><span class="t-name">CALLE OSCURA</span><span class="t-feat">Sencillo</span></span>
+          <span class="t-time">03:02</span>
+          <span class="t-play" aria-hidden="true"></span>
+        </button>
+        <button class="track" data-track="2" data-name="VINO Y HUMO" data-feat="feat. La Insuperable">
+          <span class="t-idx">03</span>
+          <span class="t-meta"><span class="t-name">VINO Y HUMO</span><span class="t-feat">feat. La Insuperable</span></span>
+          <span class="t-time">02:48</span>
+          <span class="t-play" aria-hidden="true"></span>
+        </button>
+        <button class="track" data-track="3" data-name="BAJO PRESIÓN" data-feat="feat. El Cherry">
+          <span class="t-idx">04</span>
+          <span class="t-meta"><span class="t-name">BAJO PRESIÓN</span><span class="t-feat">feat. El Cherry</span></span>
+          <span class="t-time">03:26</span>
+          <span class="t-play" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="videos">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow">Portafolio</div>
+          <h2 class="section-title">Trabajos</h2>
+        </div>
+        <div class="filters" id="filters">
+          <button class="filter active" data-filter="todos">Todos</button>
+          <button class="filter" data-filter="video">Videos</button>
+          <button class="filter" data-filter="sesion">Sesiones</button>
+          <button class="filter" data-filter="portada">Portadas</button>
+        </div>
+      </div>
+      <div class="grid reveal" id="grid">
+        <div class="card" data-cat="video"><div class="glow" style="--gx:30%;--gy:20%"></div><div class="tag">Video</div><div class="label">ASCENSIÓN</div></div>
+        <div class="card" data-cat="sesion"><div class="glow" style="--gx:65%;--gy:70%"></div><div class="tag">Sesión</div><div class="label">VINO Y HUMO</div></div>
+        <div class="card" data-cat="portada"><div class="glow" style="--gx:20%;--gy:80%"></div><div class="tag">Portada</div><div class="label">CALLE OSCURA</div></div>
+        <div class="card" data-cat="sesion"><div class="glow" style="--gx:75%;--gy:25%"></div><div class="tag">Sesión</div><div class="label">EN VIVO · SANTIAGO</div></div>
+        <div class="card" data-cat="portada"><div class="glow" style="--gx:40%;--gy:40%"></div><div class="tag">Portada</div><div class="label">SENCILLO 02</div></div>
+        <div class="card" data-cat="video"><div class="glow" style="--gx:55%;--gy:60%"></div><div class="tag">Video</div><div class="label">BAJO PRESIÓN</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sobre">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <div class="eyebrow">Biografía</div>
+          <h2 class="section-title">Sobre Nino Plug</h2>
+        </div>
+      </div>
+      <div class="bio-grid reveal">
+        <div class="bio-text">
+          <p><strong>Nino Plug</strong> lleva el dembow al filo: producción cruda, visuales oscuros y una narrativa de calle sin filtro. Desde Santiago para el mundo, cada lanzamiento se construye como una escena — sonido, imagen y actitud en una sola pieza.</p>
+          <p>Este texto es un borrador de ejemplo para probar la maqueta — reemplázalo por la biografía real, créditos y enlaces del artista antes de publicar.</p>
+        </div>
+        <div>
+          <div class="stat-row">
+            <div class="stat"><b>04</b><span>Sencillos 2026</span></div>
+            <div class="stat"><b>02</b><span>Colaboraciones</span></div>
+            <div class="stat"><b>03</b><span>Videos oficiales</span></div>
+          </div>
+          <ul class="press-list">
+            <li><b>Medio ejemplo</b><span>"Referencia de prensa — reemplazar"</span></li>
+            <li><b>Radio ejemplo</b><span>"Cita o mención — reemplazar"</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-top">
+      <div class="footer-name">NINO<br>PLUG</div>
+      <div class="footer-links">
+        <a href="#">Instagram</a>
+        <a href="#">YouTube</a>
+        <a href="#">Spotify</a>
+        <a href="#">Apple Music</a>
+        <a href="#">Booking</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 NINO PLUG — Maqueta de diseño, contenido de ejemplo</span>
+      <span>Hecho para probar antes de construir con Three.js</span>
+    </div>
+  </div>
+</footer>
+
+<div class="mini-player" id="miniPlayer">
+  <button class="mp-play playing" id="mpPlay" aria-label="Reproducir o pausar"></button>
+  <div class="mp-info">
+    <div class="mp-name" id="mpName">ASCENSIÓN — feat. DJ Kane</div>
+    <div class="mp-bar"><i id="mpBar"></i></div>
+  </div>
+  <div class="mp-time" id="mpTime">00:42</div>
+</div>
+
+<script>
+(function(){
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canHover = window.matchMedia && window.matchMedia('(hover: hover)').matches;
+
+  /* ---- tilt + shine helper: binds pointer-driven rotation, shine and shadow to a chrome-title ---- */
+  function bindChromeTilt(stageEl, titleEl){
+    if (!stageEl || !titleEl || reduced || !canHover) return;
+    stageEl.addEventListener('mousemove', function(e){
+      var r = titleEl.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width;   // 0..1
+      var py = (e.clientY - r.top) / r.height;   // 0..1
+      var dx = px - 0.5, dy = py - 0.5;
+      titleEl.style.setProperty('--mx', (px * 100) + '%');
+      titleEl.style.setProperty('--my', (py * 100) + '%');
+      titleEl.style.setProperty('--ry', (dx * 16) + 'deg');
+      titleEl.style.setProperty('--rx', (-dy * 14) + 'deg');
+      titleEl.style.setProperty('--sx', (-dx * 22) + 'px');
+      titleEl.style.setProperty('--sy', (10 + dy * 18) + 'px');
+    });
+    stageEl.addEventListener('mouseleave', function(){
+      titleEl.style.setProperty('--rx', '0deg');
+      titleEl.style.setProperty('--ry', '0deg');
+      titleEl.style.setProperty('--sx', '0px');
+      titleEl.style.setProperty('--sy', '10px');
+    });
+  }
+  bindChromeTilt(document.getElementById('titleStage'), document.getElementById('heroTitle'));
+
+  /* ---- tiny synthesized "music starts" swell (placeholder — no real track loaded) ---- */
+  function playIntroSwell(){
+    try{
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      var ctx = new Ctx();
+      var now = ctx.currentTime;
+      var master = ctx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.16, now + 0.5);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 2.2);
+      var filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(300, now);
+      filter.frequency.exponentialRampToValueAtTime(1800, now + 1.4);
+      master.connect(filter);
+      filter.connect(ctx.destination);
+      [110, 165, 220].forEach(function(freq, i){
+        var osc = ctx.createOscillator();
+        osc.type = i === 0 ? 'sawtooth' : 'sine';
+        osc.frequency.value = freq;
+        osc.connect(master);
+        osc.start(now);
+        osc.stop(now + 2.3);
+      });
+      setTimeout(function(){ ctx.close && ctx.close(); }, 2600);
+    } catch(err){ /* audio not available — silent fallback */ }
+  }
+
+  /* ---- intro: album / vinyl click-to-enter sequence ---- */
+  var intro = document.getElementById('intro');
+  var stageHover = document.getElementById('stageHover');
+  var recordStage = document.getElementById('recordStage');
+  var introHint = document.getElementById('introHint');
+  var heroTitle = document.getElementById('heroTitle');
+  var introDone = false;
+
+  if (canHover && !reduced){
+    stageHover.addEventListener('mouseenter', function(){ recordStage.classList.add('near'); });
+    stageHover.addEventListener('mouseleave', function(){ recordStage.classList.remove('near'); });
+  }
+
+  /* once the spin-in animation finishes, hand the title off to the live mouse-tilt
+     custom properties (--rx/--ry) instead of leaving it pinned to the animation's
+     final transform — this is what keeps it reactive forever after, and keeps it
+     on screen instead of disappearing with the rest of the intro overlay */
+  heroTitle.addEventListener('animationend', function(e){
+    if (e.animationName !== 'chromeSpin') return;
+    heroTitle.classList.remove('spin-play');
+    heroTitle.classList.add('settled');
+  });
+
+  function enterSite(){
+    if (introDone) return;
+    introDone = true;
+    if (reduced){
+      intro.classList.add('hide');
+      heroTitle.classList.add('settled');
+      revealMiniPlayer();
+      return;
+    }
+    recordStage.classList.add('leaving');
+    introHint.classList.add('leaving');
+    playIntroSwell();
+    setTimeout(function(){
+      heroTitle.classList.add('spin-play');
+    }, 180);
+    setTimeout(function(){
+      intro.classList.add('hide');
+      revealMiniPlayer();
+    }, 2400);
+  }
+  recordStage.addEventListener('click', enterSite);
+  recordStage.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); enterSite(); } });
+
+  /* ---- nav solid + active link on scroll ---- */
+  var nav = document.getElementById('siteNav');
+  var navLinks = Array.prototype.slice.call(document.querySelectorAll('[data-nav]'));
+  var sections = navLinks.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  function onScroll(){
+    nav.classList.toggle('solid', window.scrollY > 40);
+    var y = window.scrollY + 120;
+    var activeIdx = 0;
+    sections.forEach(function(s, i){ if (s && s.offsetTop <= y) activeIdx = i; });
+    navLinks.forEach(function(a, i){ a.classList.toggle('active', i === activeIdx); });
+  }
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  /* ---- reveal on scroll ---- */
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && !reduced){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: .15 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  }
+
+  /* ---- hero glow follows pointer ---- */
+  var hero = document.getElementById('hero');
+  if (!reduced && window.matchMedia('(hover: hover)').matches){
+    hero.addEventListener('mousemove', function(e){
+      var r = hero.getBoundingClientRect();
+      hero.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+      hero.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+    });
+  }
+
+  /* ---- tracklist + mini player ---- */
+  var tracks = Array.prototype.slice.call(document.querySelectorAll('.track'));
+  var miniPlayer = document.getElementById('miniPlayer');
+  var mpName = document.getElementById('mpName');
+  var mpPlay = document.getElementById('mpPlay');
+  var playing = true;
+
+  function activateTrack(track){
+    tracks.forEach(function(t){
+      t.classList.remove('active');
+      var eq = t.querySelector('.eq');
+      if (eq) eq.remove();
+      var feat = t.querySelector('.t-feat');
+      feat.textContent = feat.textContent.replace(' · Reproduciendo ahora', '');
+    });
+    track.classList.add('active');
+    var feat = track.querySelector('.t-feat');
+    if (feat.textContent.indexOf('Reproduciendo ahora') === -1){
+      feat.textContent = feat.textContent + ' · Reproduciendo ahora';
+    }
+    var timeSpan = track.querySelector('.t-time');
+    var eq = document.createElement('span');
+    eq.className = 'eq';
+    eq.innerHTML = '<span></span><span></span><span></span>';
+    timeSpan.appendChild(eq);
+    mpName.textContent = track.dataset.name + ' — ' + track.dataset.feat;
+    playing = true;
+    mpPlay.classList.add('playing');
+  }
+  function revealMiniPlayer(){ miniPlayer.classList.add('show'); }
+
+  tracks.forEach(function(t){
+    t.addEventListener('click', function(){ activateTrack(t); });
+  });
+  activateTrack(tracks[0]);
+
+  mpPlay.addEventListener('click', function(){
+    playing = !playing;
+    mpPlay.classList.toggle('playing', playing);
+  });
+
+  /* ---- works filter ---- */
+  var filters = document.querySelectorAll('.filter');
+  var cards = document.querySelectorAll('.card');
+  filters.forEach(function(f){
+    f.addEventListener('click', function(){
+      filters.forEach(function(x){ x.classList.remove('active'); });
+      f.classList.add('active');
+      var cat = f.dataset.filter;
+      cards.forEach(function(c){
+        c.classList.toggle('hidden', cat !== 'todos' && c.dataset.cat !== cat);
+      });
+    });
+  });
+})();
+</script>

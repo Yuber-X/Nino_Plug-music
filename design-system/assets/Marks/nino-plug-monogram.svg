@@ -1,0 +1,5 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="NP monogram">
+  <path d="M8 8 H122 L152 38 V152 H38 L8 122 Z" fill="none" stroke="#f4efe8" stroke-width="3"/>
+  <path d="M122 8 L152 38 H122 Z" fill="#c23a52"/>
+  <text x="30" y="102" font-family="Arial Black, Helvetica Neue, Helvetica, sans-serif" font-weight="900" font-size="64" fill="#f4efe8">NP</text>
+</svg>

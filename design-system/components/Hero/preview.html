@@ -1,0 +1,55 @@
+<!-- @dsCard group="Estructura" height=520 subtitle="Sección de apertura del one-page" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Hero — preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; }
+  body { background: var(--surface-950); }
+  .hero {
+    position: relative;
+    height: 520px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: var(--space-16) var(--space-16) var(--space-16);
+    background:
+      radial-gradient(90% 70% at 78% 22%, var(--wine-900) 0%, transparent 60%),
+      var(--surface-950);
+    overflow: hidden;
+  }
+  .kicker {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em;
+    color: var(--wine-400); text-transform: uppercase; margin-bottom: var(--space-4);
+  }
+  .title {
+    font-family: var(--font-display);
+    font-size: 112px; line-height: .9; letter-spacing: -0.01em;
+    color: var(--bone-100); margin: 0 0 var(--space-4) 0;
+    text-shadow: var(--shadow-glow-wine);
+    max-width: 900px;
+  }
+  .sub {
+    font-family: var(--font-body); font-size: 20px; line-height: 30px;
+    color: var(--ash-300); max-width: 520px; margin: 0;
+  }
+  .scroll {
+    position: absolute; right: var(--space-16); bottom: var(--space-16);
+    display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em;
+    color: var(--ash-500); text-transform: uppercase;
+  }
+  .scroll .line { width: 1px; height: 40px; background: var(--line-strong); }
+</style>
+</head>
+<body>
+<section class="hero">
+  <div class="kicker">Nuevo sencillo · 2026</div>
+  <h1 class="title">ASCENSIÓN</h1>
+  <p class="sub">Producción y dirección visual del próximo capítulo de Nino Plug.</p>
+  <div class="scroll"><span>Scroll</span><span class="line"></span></div>
+</section>
+</body>
+</html>

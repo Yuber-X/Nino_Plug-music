@@ -1,0 +1,51 @@
+<!-- @dsCard height=320 -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Nino Plug</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; height:100%; }
+  body { background: var(--surface-950); color: var(--bone-100); font-family: var(--font-body); overflow: hidden; }
+  .cover { position: relative; width: 960px; height: 320px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 0; width: 960px; height: 320px; }
+  .blockA { fill: var(--wine-700); }
+  .blockB { fill: var(--wine-400); }
+  .blockC { fill: var(--surface-700); }
+  .blockD { fill: var(--wine-500); }
+  .cut { fill: var(--surface-950); }
+  .words { position: absolute; left: var(--space-6); right: var(--space-6); bottom: var(--space-6); max-width: 440px; }
+  .name {
+    margin: 0; font-family: var(--font-display); font-size: 80px; line-height: .9;
+    letter-spacing: -0.01em; color: var(--bone-100); text-transform: uppercase;
+  }
+  .tag { margin: var(--space-2) 0 0 0; font-family: var(--font-mono); font-size: 13px; letter-spacing: .04em; color: var(--ash-300); }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="art" aria-hidden="true">
+    <svg viewBox="0 0 960 320" width="960" height="320">
+      <!--
+        blocks      wine-700 208×272 bleeding off the top (brand, the largest) · wine-400 144×144 (the live accent) · surface-700 176×48 grounding strip (the neutral surface family) · wine-500 48×48 tint for relief — ≈29% of 960×320
+        arrangement one tall wine-700 slab bled off the top with three satellites stepping down-right, space-4 (16px) gutters between every pair, all sides on the space-4 grid
+        pattern     one oversized "%" cut from the ground colour through the wine-700 slab — the loader's percentage counter is this system's most specific motif, so the mark borrows it instead of a generic dot/stripe row
+        scales      sides in 16px (space-4) multiples; radius-none throughout (no radii tokens used — the system's own signature is the sharp, unrounded edge)
+      -->
+      <rect class="blockA" x="560" y="-16" width="208" height="272"/>
+      <rect class="blockB" x="784" y="64" width="144" height="144"/>
+      <rect class="blockC" x="496" y="256" width="176" height="48"/>
+      <rect class="blockD" x="896" y="224" width="48" height="48"/>
+      <text class="cut" x="606" y="230" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="230">%</text>
+    </svg>
+  </div>
+  <div class="words">
+    <h1 class="name">Nino Plug</h1>
+    <p class="tag">Dembow oscuro · portafolio y experiencia visual</p>
+  </div>
+</div>
+</body>
+</html>

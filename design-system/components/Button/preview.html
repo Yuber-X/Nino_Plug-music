@@ -1,0 +1,30 @@
+<!-- @dsCard group="Acciones" height=88 subtitle="Primario, secundario y solo-texto" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Button — preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; }
+  body { background: var(--surface-950); display:flex; align-items:center; gap: var(--space-6); padding: 0 var(--space-8); height: 88px; box-sizing: border-box; }
+  .btn {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-none);
+    border: 1px solid transparent;
+    cursor: pointer;
+  }
+  .btn.primary { background: var(--wine-700); color: var(--bone-100); }
+  .btn.secondary { background: transparent; color: var(--bone-100); border-color: var(--line-strong); }
+  .btn.ghost { background: transparent; color: var(--ash-300); border: none; padding-left: 0; padding-right: 0; }
+</style>
+</head>
+<body>
+<button class="btn primary">Escuchar ahora</button>
+<button class="btn secondary">Ver videos</button>
+<button class="btn ghost">Contacto →</button>
+</body>
+</html>

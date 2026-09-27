@@ -1,0 +1,18 @@
+node_modules/
+dist/
+build/
+.vite/
+*.local
+.env
+.env.*
+!.env.example
+
+# Material pesado del cliente (videos y fotos): vive en Claude Active, no acá
+*.mp4
+*.mov
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log

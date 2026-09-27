@@ -1,0 +1,47 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": { "v": 1, "at": "2026-09-18T22:00:02Z" },
+  "title": "NINO PLUG",
+  "namespace": "NinoPlug",
+  "libraries": [],
+  "sections": {},
+  "groups": ["Marks", "Textures", "Backgrounds"],
+  "assetGroups": {
+    "Marks": {
+      "name": "Marks",
+      "tile": "m",
+      "order": ["nino-plug-wordmark.svg", "nino-plug-monogram.svg"],
+      "files": {
+        "nino-plug-wordmark.svg": { "name": "nino-plug-wordmark.svg", "blob": "18d30770f92dee76678a4260c4bdc27c", "size": 395, "type": "image/svg+xml" },
+        "nino-plug-monogram.svg": { "name": "nino-plug-monogram.svg", "blob": "f77753bd3108b7d2476cdcb76a120005", "size": 435, "type": "image/svg+xml" }
+      }
+    },
+    "Textures": {
+      "name": "Textures",
+      "tile": "m",
+      "order": ["grain.png", "static.png", "scanlines.png"],
+      "files": {
+        "grain.png": { "name": "grain.png", "blob": "743c9f0aa72c4c0a8e19d66d880c5c74", "size": 258664, "type": "image/png" },
+        "static.png": { "name": "static.png", "blob": "8cee448a06b3d2dc4312152ba1d07ddc", "size": 123427, "type": "image/png" },
+        "scanlines.png": { "name": "scanlines.png", "blob": "597947feec995587e535e26e76847679", "size": 90, "type": "image/png" }
+      }
+    },
+    "Backgrounds": {
+      "name": "Backgrounds",
+      "tile": "l",
+      "order": ["atmosphere-wine.png"],
+      "files": {
+        "atmosphere-wine.png": { "name": "atmosphere-wine.png", "blob": "b252e5ae105fc45436e30fed9e72fbfc", "size": 2786040, "type": "image/png" }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": { "readme": "project/README.md", "sections": [] },
+  "lastChange": {
+    "by": "Yuber",
+    "via": "Cowork",
+    "at": "2026-09-18T22:00:02Z",
+    "note": "Primera versión: paleta dark trap (negros/grises + vino oscuro), tipografía Anton/IBM Plex, spacing y radios, seis componentes base (Loader, Nav, Hero, TrackList, WorksGrid, Button) y texturas/marca provisional generadas por código."
+  }
+}

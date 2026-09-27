@@ -1,0 +1,67 @@
+/* GENERADO desde design-system/tokens.json — no editar a mano.
+ * Regenerar con scripts/generar-tokens.py cuando cambie el sistema. */
+:root {
+  /* Color */
+  --surface-950: #0a0908;
+  --surface-900: #121011;
+  --surface-800: #1c1917;
+  --surface-700: #2b2624;
+  --line: #3a3330;
+  --line-strong: #655e58;
+  --ash-500: #7a736c;
+  --ash-300: #a89f97;
+  --bone-100: #f4efe8;
+  --wine-900: #2e0910;
+  --wine-700: #5c1220;
+  --wine-500: #86192c;
+  --wine-400: #c23a52;
+
+  /* Tipografía */
+  --fuente-display: 'Anton', 'Arial Narrow Bold', sans-serif;
+  --fuente-body: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  --fuente-mono: 'IBM Plex Mono', 'SFMono-Regular', monospace;
+  --display-xl-size: 148px;
+  --display-xl-line: 134px;
+  --display-xl-tracking: -0.01em;
+  --display-lg-size: 88px;
+  --display-lg-line: 80px;
+  --display-lg-tracking: -0.005em;
+  --display-md-size: 48px;
+  --display-md-line: 46px;
+  --body-lg-size: 20px;
+  --body-lg-line: 30px;
+  --body-size: 16px;
+  --body-line: 26px;
+  --body-sm-size: 14px;
+  --body-sm-line: 22px;
+  --label-size: 12px;
+  --label-line: 16px;
+  --label-tracking: 0.14em;
+  --stat-size: 13px;
+  --stat-line: 16px;
+  --stat-tracking: 0.03em;
+  --counter-size: 20px;
+  --counter-line: 22px;
+  --counter-tracking: 0.02em;
+
+  /* Espaciado */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* Radios */
+  --radius-none: 0px;
+  --radius-sm: 2px;
+  --radius-full: 999px;
+
+  /* Sombras */
+  --shadow-glow-wine: 0 0 120px 0 rgba(194,58,82,0.35);
+  --shadow-panel: 0 24px 64px -24px rgba(0,0,0,0.7);
+}

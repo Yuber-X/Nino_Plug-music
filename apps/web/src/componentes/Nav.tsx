@@ -46,8 +46,11 @@ export function Nav() {
 
   return (
     <header className={solida ? 'nav solid' : 'nav'}>
+      {/* El artista es lo que se lee; Money One 1 es el sello y va como
+          crédito, no compitiendo con el nombre (decisión de Yuber 2026-09-28). */}
       <div className="brand">
-        NINO<span className="dot">·</span>PLUG
+        <span className="brand-artista">SKINNY XANDER</span>
+        <span className="brand-sello">Money One 1</span>
       </div>
       <ul className="nav-links">
         {SECCIONES.map((s) => (

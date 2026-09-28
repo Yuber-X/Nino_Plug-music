@@ -25,7 +25,10 @@ export interface Tema {
 
 export const artista = {
   nombre: 'Skinny Xander',
-  proyecto: 'Ni\u00f1o Plug',
+  /** El sello del artista. Va como crédito; el nombre que manda es el del artista. */
+  sello: 'Money One 1',
+  /** Nombre interno del proyecto y del repositorio. NO se muestra en el sitio. */
+  proyecto: 'nino-plug',
   origen: 'Rep\u00fablica Dominicana',
   generos: ['Trap', 'Rap', 'Dembow'],
   desde: 2020,

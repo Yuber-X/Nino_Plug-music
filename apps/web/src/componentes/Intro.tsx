@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { temas } from '../datos/artista';
 
 /**
  * La puerta de entrada: disco + portada, y el sitio no arranca hasta que el
@@ -11,6 +12,10 @@ import { useState } from 'react';
 export function Intro({ alEntrar }: { alEntrar: () => void }) {
   const [saliendo, setSaliendo] = useState(false);
   const [fuera, setFuera] = useState(false);
+
+  // La portada de la puerta es el último lanzamiento, no un título fijo: el
+  // sitio se mantiene solo cuando el artista publica.
+  const ultimo = temas[0];
 
   if (fuera) return null;
 
@@ -28,18 +33,18 @@ export function Intro({ alEntrar }: { alEntrar: () => void }) {
         <div className="stage-hover">
           <button className="record-stage" onClick={entrar} aria-label="Entrar al sitio y reproducir">
             <div className="vinyl" aria-hidden="true">
-              <div className="vinyl-label">NP</div>
+              <div className="vinyl-label">SX</div>
             </div>
             <div className="album" aria-hidden="true">
+              {/* La portada REAL del último lanzamiento. El prototipo dibujaba
+                  una puerta con divs porque no había material; ya lo hay. */}
               <div className="album-art">
+                <img src={ultimo.arte} alt="" />
                 <div className="glow" />
-                <div className="door" />
-                <div className="figure" />
-                <div className="steps" />
               </div>
               <div className="album-meta">
-                <span className="album-title">ASCENSIÓN</span>
-                <span className="album-artist">Skinny Xander</span>
+                <span className="album-title">{ultimo.titulo}</span>
+                <span className="album-artist">Skinny Xander · Money One 1</span>
               </div>
             </div>
           </button>

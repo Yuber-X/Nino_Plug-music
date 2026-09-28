@@ -1,29 +1,56 @@
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
+
+import { temas } from '../datos/artista';
+import { hayWebGL } from '../tres/webgl';
 
 /**
- * Portada: el título cromado que gira al entrar y después queda reaccionando al
- * mouse.
+ * three.js + drei pesan más que todo el resto del sitio junto. Cargándolos
+ * aparte, la página aparece completa de entrada y el motor 3D llega mientras
+ * el visitante todavía está en la puerta; en una máquina sin WebGL no se
+ * descarga nunca.
+ */
+const TituloCromado = lazy(() =>
+  import('../tres/TituloCromado').then((m) => ({ default: m.TituloCromado })),
+);
+
+const NOMBRE = 'SKINNY XANDER';
+
+/**
+ * Portada: el nombre del artista en metal, girando al entrar y siguiendo al
+ * mouse después.
  *
- * ⚠ Por ahora el efecto es el del prototipo: CSS (degradado cromado +
- * perspectiva + tilt con el puntero). Three.js entra en la fase de mejora,
- * cuando el cliente apruebe la base — la idea es reemplazar solo este bloque
- * por letras extruidas con material metálico, sin tocar el resto del sitio.
+ * Hay DOS versiones del título y no es indecisión:
+ *  · La 3D real (three.js) es la buena, la que pidió el cliente.
+ *  · La de CSS queda como respaldo para las máquinas sin WebGL y para quien
+ *    activó "reducir movimiento". Un sitio de música que en una PC vieja de la
+ *    disquera no muestra el nombre del artista no sirve de nada.
  */
 export function Hero({ entro }: { entro: boolean }) {
   const escenario = useRef<HTMLDivElement>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
+  const [tres, setTres] = useState(false);
+
+  const ultimo = temas[0];
+  const anio = ultimo.lanzamiento.slice(0, 4);
 
   useEffect(() => {
+    const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTres(hayWebGL() && !reducido);
+  }, []);
+
+  // ---- Respaldo en CSS: mismo tilt del prototipo ----
+  useEffect(() => {
+    if (tres) return;
     const stage = escenario.current;
     const h1 = titulo.current;
     if (!stage || !h1) return;
 
-    // Sin puntero fino (táctil) o con "reducir movimiento", no se liga nada:
-    // en un teléfono el tilt no tiene sentido y el movimiento molesta a quien
-    // pidió que no lo haya.
     const finos = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!finos || reducido) return;
+    if (!finos || reducido) {
+      h1.classList.add('settled');
+      return;
+    }
 
     const mover = (e: MouseEvent) => {
       const r = h1.getBoundingClientRect();
@@ -38,7 +65,6 @@ export function Hero({ entro }: { entro: boolean }) {
       h1.style.setProperty('--sx', `${-dx * 22}px`);
       h1.style.setProperty('--sy', `${10 + dy * 18}px`);
     };
-
     const salir = () => {
       h1.style.setProperty('--rx', '0deg');
       h1.style.setProperty('--ry', '0deg');
@@ -52,15 +78,13 @@ export function Hero({ entro }: { entro: boolean }) {
       stage.removeEventListener('mousemove', mover);
       stage.removeEventListener('mouseleave', salir);
     };
-  }, []);
+  }, [tres]);
 
   useEffect(() => {
+    if (tres) return;
     const h1 = titulo.current;
     if (!h1 || !entro) return;
 
-    // Cuando termina el giro, el título pasa a "settled": ahí suelta el
-    // transform de la animación y queda mandado por las variables del tilt. Si
-    // se deja pegado al final de la animación, se queda tieso para siempre.
     const alTerminar = (e: AnimationEvent) => {
       if (e.animationName !== 'chromeSpin') return;
       h1.classList.remove('spin-play');
@@ -69,25 +93,43 @@ export function Hero({ entro }: { entro: boolean }) {
     h1.addEventListener('animationend', alTerminar);
     h1.classList.add('spin-play');
     return () => h1.removeEventListener('animationend', alTerminar);
-  }, [entro]);
+  }, [entro, tres]);
 
   return (
     <section className="hero" id="hero">
-      <div className="kicker">Último sencillo · 2026</div>
-      <div className="title-stage" ref={escenario}>
-        <h1 className="chrome-title" ref={titulo}>
-          ASCENSIÓN
-        </h1>
+      <div className="kicker">
+        Último sencillo · {ultimo.titulo} · {anio}
+      </div>
+
+      <div className={tres ? 'title-stage title-3d' : 'title-stage'} ref={escenario}>
+        {tres ? (
+          <Suspense fallback={null}>
+            <TituloCromado texto={NOMBRE} entro={entro} />
+          </Suspense>
+        ) : (
+          <h1 className="chrome-title" ref={titulo}>
+            {NOMBRE}
+          </h1>
+        )}
+        {/* El nombre siempre está en el HTML, aunque la portada sea un canvas:
+            es lo que leen Google y un lector de pantalla. */}
+        {tres && <h1 className="solo-lectores">{NOMBRE}</h1>}
+
         <span className="sparkle" style={{ top: '6%', left: '2%', fontSize: 22 }}>
           ✦
         </span>
-        <span className="sparkle" style={{ bottom: '10%', right: '4%', fontSize: 15, animationDelay: '1.3s' }}>
+        <span
+          className="sparkle"
+          style={{ bottom: '10%', right: '4%', fontSize: 15, animationDelay: '1.3s' }}
+        >
           ✦
         </span>
       </div>
+
       <p className="sub">
         Trap, rap y dembow desde República Dominicana. Sonido crudo, visuales oscuros, sin filtro.
       </p>
+
       <div className="hero-actions">
         <a className="btn btn-primary" href="#musica">
           ▶ Reproducir ahora
@@ -96,6 +138,7 @@ export function Hero({ entro }: { entro: boolean }) {
           Ver videos
         </a>
       </div>
+
       <div className="scroll-cue">
         <span>Scroll</span>
         <span className="line" />

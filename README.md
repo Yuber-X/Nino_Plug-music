@@ -38,6 +38,6 @@ scripts             generar-tokens.py
 - [ ] Enlace de Spotify
 - [ ] Definir hospedaje de los videos oficiales
 - [ ] Revisar licencia de las tipografías Darkhusk y MecaGothix
-- [ ] Decidir qué nombre manda: Skinny Xander / Niño Plug / Money One (CLAUDE.md §1)
+- [ ] Portadas: varias son fotos claras — revisar con el cliente cuáles van al sitio
 
 Detalle de decisiones y convenciones: [`CLAUDE.md`](CLAUDE.md).

@@ -18,18 +18,16 @@ Otras referencias: <https://arstraumur.music/> y <https://www.forms.world/works/
 está diseñada, y recién después la mejora total de la portada. El main actual
 *no* es el resultado final y se sabe.
 
-### 🟡 Pendiente de definir: qué nombre manda
+### Los tres nombres (resuelto por Yuber, 2026-09-28)
 
-Hay tres nombres en el material y no está resuelto cuál es la marca del sitio:
+| Nombre | Qué es | Dónde aparece |
+|---|---|---|
+| **Skinny Xander** | El artista | **En todo el sitio**: portada 3D, barra, pie, títulos, metadatos |
+| **Money One 1** | El sello / la marca | Como crédito: bajo el nombre en la barra y en el pie |
+| **nino-plug** | Nombre interno del proyecto y del repositorio | **No se muestra en el sitio** |
 
-- **Skinny Xander** — el artista (así aparece en Apple Music, YouTube, Instagram).
-- **Niño Plug** — el nombre del repositorio y el que usa el prototipo base como
-  wordmark.
-- **Money One 1 / Overtbitch** — lo que dice el logo que entregó el cliente.
-
-Hasta que Yuber lo aclare, el sitio muestra "NINO·PLUG" como marca (lo que traía
-la base) y "Skinny Xander" como artista. **No inventar una jerarquía nueva sin
-preguntar.**
+El nombre que se lee es siempre el del artista; el sello acompaña, no compite.
+Nada de "Niño Plug" queda visible de cara al público.
 
 ---
 
@@ -56,6 +54,30 @@ no una función del sitio.
 
 ⚠ **Node 20.19+ o 22.12+.** La máquina tiene 20.15 y Vite avisa en cada arranque;
 anda igual, pero conviene actualizar.
+
+---
+
+## 2.1. La portada en 3D
+
+El nombre del artista es geometría extruida de verdad (`src/tres/`), no texto
+con degradado:
+
+- **La tipografía se lee del `.ttf`** con `opentype.js` y se convierte a
+  `ExtrudeGeometry` (`geometriaTexto.ts`). `Text3D` de drei se descartó porque
+  exige el formato `typeface.json`, que habría que regenerar cada vez que el
+  cliente cambie de tipografía. Así, el día que entregue la suya (Darkhusk,
+  MecaGothix) se cambia una ruta.
+- **El ambiente son `Lightformer`s propios**, no un HDRI de un CDN: el reflejo
+  queda controlado (blanco duro + vino del sistema) y el sitio no depende de un
+  servidor ajeno. El grueso del reflejo tiene que ser BLANCO — con vino de
+  frente las letras se ven pintadas de rojo, no de metal.
+- **Se carga aparte** (`lazy`): three.js + drei son 1.2 MB contra 260 KB del
+  resto. La página aparece completa de entrada y el motor llega mientras el
+  visitante está en la puerta. En una máquina sin WebGL no se descarga nunca.
+- **Hay respaldo en CSS** (el título del prototipo) para máquinas sin WebGL y
+  para quien activó "reducir movimiento", y el nombre siempre está en el HTML
+  aunque la portada sea un canvas — si no, para Google el sitio no dice quién
+  es el artista.
 
 ---
 

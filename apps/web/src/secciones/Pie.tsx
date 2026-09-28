@@ -6,9 +6,9 @@ export function Pie() {
       <div className="wrap">
         <div className="footer-top">
           <div className="footer-name">
-            NINO
+            SKINNY
             <br />
-            PLUG
+            XANDER
           </div>
           <div className="footer-links">
             <a href={artista.enlaces.instagram} target="_blank" rel="noreferrer">
@@ -28,9 +28,9 @@ export function Pie() {
         </div>
         <div className="footer-bottom">
           <span>
-            © {new Date().getFullYear()} {artista.nombre} — base de diseño, contenido en revisión
+            © {new Date().getFullYear()} {artista.nombre} · {artista.sello} — contenido en revisión
           </span>
-          <span>Próximo paso: Three.js en la portada</span>
+          <span>{artista.origen}</span>
         </div>
       </div>
     </footer>

@@ -81,6 +81,22 @@ con degradado:
 
 ---
 
+## 2.1.1. La tipografía del título
+
+El cliente quiere letra **death metal**. Darkhusk era la elegida, pero su
+licencia prohíbe el uso comercial, así que el título usa **Eater** —la más
+parecida de las libres— y quedan otras tres cargadas para comparar en vivo:
+
+| `?fuente=` | Tipografía | Licencia | Pinta |
+|---|---|---|---|
+| `eater` *(la actual)* | Eater | OFL, libre | Púas; la más cercana a Darkhusk |
+| `nosifer` | Nosifer | OFL, libre | Goteada, de terror |
+| `metalmania` | Metal Mania | OFL, libre | Trazo rugoso de banda |
+| `pirata` | Pirata One | OFL, libre | Gótica / blackletter |
+
+OFL (SIL Open Font License) permite usarlas en un sitio comercial sin pagar y
+sin pedir permiso.
+
 ## 2.2. Pantalla de carga y entrada (2026-09-29)
 
 La carga no es una barra decorativa: mide descargas reales (los clips del
@@ -179,12 +195,13 @@ Vive en `Freelancer - Claude Active\Web\Nino_Plug-music-repertorio\`:
 - Videos oficiales (`.mp4`, 25–40 MB cada uno) — **no van al repositorio**.
   Definir hospedaje (YouTube embebido o CDN) antes de la sección de videos.
 - Fotos y el logo del cliente.
-- 🔴 **`Darkhusk.otf` es SOLO PARA USO PERSONAL.** Es la tipografía del título
-  3D desde el 2026-09-29, por pedido del cliente. Publicar el sitio del artista
-  con ella es uso comercial: hay que **comprar la licencia en
-  masyafistudio.com** antes de salir a producción, o cambiarla. El texto de la
-  licencia está copiado en `apps/web/public/fuentes/LICENCIA-Darkhusk.txt`.
-  `MecaGothix.ttf` todavía no se usa; revisar su licencia antes.
+- 🔴 **`Darkhusk.otf` es SOLO PARA USO PERSONAL** (su licencia amenaza con una
+  multa de US$999 por uso comercial). Se probó el 2026-09-29 y se reemplazó el
+  2026-09-30: **no está en el repositorio** — subirla a un repositorio público
+  sería redistribuirla. Vive en
+  `Claude Active\Web\Nino_Plug-music-repertorio\Fuentes`; para compararla hay
+  que copiarla a mano a `apps/web/public/fuentes/` y abrir `?fuente=darkhusk`.
+  `MecaGothix.ttf` tampoco se usa; revisar su licencia antes de tocarla.
 - Capturas de las referencias.
 
 ---

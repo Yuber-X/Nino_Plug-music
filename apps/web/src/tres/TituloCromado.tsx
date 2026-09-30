@@ -6,13 +6,40 @@ import * as THREE from 'three';
 import { cargarFuente, geometriaDeTexto } from './geometriaTexto';
 
 /**
- * Tipografía del título. Darkhusk es la que eligió el cliente (2026-09-29).
+ * Tipografías candidatas para el título.
  *
- * ⚠ LICENCIA: Darkhusk es SOLO PARA USO PERSONAL. Publicar el sitio del
- * artista con esta fuente es uso comercial y hay que comprar la licencia en
- * masyafistudio.com antes de salir a producción. Ver CLAUDE.md §6.
+ * Todas las de esta lista son OFL (SIL Open Font License): se pueden usar en
+ * un sitio comercial sin pagar nada. La única que NO lo es sigue siendo
+ * Darkhusk —uso personal, multa de US$999 si se publica— y está acá solo para
+ * comparar mientras el cliente elige (2026-09-30).
+ *
+ * Se cambia con ?fuente=nombre, para poder mirarlas una al lado de la otra.
  */
-const FUENTE = '/fuentes/Darkhusk.otf';
+const FUENTES: Record<string, string> = {
+  metalmania: '/fuentes/MetalMania-Regular.ttf',
+  nosifer: '/fuentes/Nosifer-Regular.ttf',
+  eater: '/fuentes/Eater-Regular.ttf',
+  pirata: '/fuentes/PirataOne-Regular.ttf',
+  // Darkhusk NO viaja en el repositorio: es de uso personal y subirla a un
+  // repositorio público sería redistribuirla. Para compararla, copiar el .otf
+  // desde "Claude Active\Web\...\Fuentes" a apps/web/public/fuentes/ y
+  // abrir ?fuente=darkhusk.
+  darkhusk: '/fuentes/Darkhusk.otf',
+};
+
+/**
+ * La que usa el sitio hoy: Eater es la más parecida a Darkhusk de las libres
+ * —letras con púas, del palo death metal— y no cuesta nada publicarla.
+ */
+const FUENTE_POR_DEFECTO = 'eater';
+
+function fuenteElegida(): string {
+  if (typeof window === 'undefined') return FUENTES[FUENTE_POR_DEFECTO];
+  const pedida = new URLSearchParams(window.location.search).get('fuente');
+  return FUENTES[pedida ?? ''] ?? FUENTES[FUENTE_POR_DEFECTO];
+}
+
+const FUENTE = fuenteElegida();
 
 /**
  * El nombre del artista en metal plateado, arqueado, en 3D real.

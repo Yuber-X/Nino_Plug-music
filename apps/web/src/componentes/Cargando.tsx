@@ -46,10 +46,16 @@ export function Cargando({ alEntrar }: { alEntrar: () => void }) {
   // ?carga=0.35 congela la barra en ese punto. Es para trabajar el diseño de
   // la pantalla: en una máquina con todo en caché la carga dura un parpadeo y
   // no hay forma de mirar los estados intermedios.
-  const forzado =
+  // OJO con el null: get() devuelve null cuando el parámetro NO está, y
+  // Number(null) es 0 —un número perfectamente finito—. Con la comprobación
+  // hecha sobre Number.isFinite a secas, TODA visita quedaba con la barra
+  // congelada en 000% (reportado 2026-09-30). Primero se mira si el parámetro
+  // existe.
+  const parametro =
     typeof window !== 'undefined'
-      ? Number(new URLSearchParams(window.location.search).get('carga'))
-      : Number.NaN;
+      ? new URLSearchParams(window.location.search).get('carga')
+      : null;
+  const forzado = parametro === null ? Number.NaN : Number(parametro);
   const hayForzado = Number.isFinite(forzado);
   const avance = hayForzado ? Math.min(1, Math.max(0, forzado)) : real.avance;
   const listo = hayForzado ? avance >= 1 : real.listo;
@@ -106,14 +112,26 @@ export function Cargando({ alEntrar }: { alEntrar: () => void }) {
             })}
           </div>
 
-          <div className="cargando-portada">
-            <img src={ultimo.arte} alt="" />
-            <div className="cargando-brillo" />
-            <div className="cargando-meta">
-              <span className="cargando-titulo">{ultimo.titulo}</span>
-              <span className="cargando-artista">Skinny Xander · Money One 1</span>
+          {/* Un disco, no la portada cuadrada: al girar 90° una foto se ve
+              "torcida" y el ojo pide volver a enderezarla, mientras que un
+              vinilo girando es lo que uno espera (pedido del cliente,
+              2026-09-30). La portada queda como etiqueta del centro. */}
+          <div className="cargando-vinilo">
+            <div className="cargando-surcos" />
+            <div className="cargando-reflejo" />
+            <div className="cargando-etiqueta">
+              <img src={ultimo.arte} alt="" />
+              <div className="cargando-agujero" />
             </div>
           </div>
+
+        </div>
+
+        {/* El nombre del disco va FUERA del cuadro que gira: adentro se daba
+            vuelta con él y a mitad de carga se leía al revés (2026-09-30). */}
+        <div className="cargando-meta">
+          <span className="cargando-titulo">{ultimo.titulo}</span>
+          <span className="cargando-artista">Skinny Xander · Money One 1</span>
         </div>
 
         <div className="cargando-cifra">{String(Math.round(avance * 100)).padStart(3, '0')}%</div>

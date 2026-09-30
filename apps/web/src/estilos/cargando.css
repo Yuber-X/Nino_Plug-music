@@ -20,7 +20,7 @@
 /* El cuadro que gira 90° en cada vuelta de la barra. */
 .cargando-cuadro{
   position:relative;
-  width:min(46vw, 320px);
+  width:min(46vw, 300px);
   transition:transform .9s cubic-bezier(.65,0,.2,1);
   transform-origin:50% 50%;
 }
@@ -43,24 +43,62 @@
   transition:width .18s linear, opacity .18s linear;
 }
 
-/* ---- la portada dentro del cuadro ---- */
-.cargando-portada{
-  position:relative; aspect-ratio:1; overflow:hidden;
-  border:1px solid var(--line);
-  background:var(--surface-800);
+/* ---- el vinilo ---- */
+.cargando-vinilo{
+  position:relative; aspect-ratio:1; border-radius:50%;
+  background:#070706;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.05);
+  overflow:hidden;
+  /* Gira siempre, como un disco puesto. La vuelta de 90° del cuadro se suma a
+     esto y por eso ya no se siente que algo quedó torcido. */
+  animation:vinilo 7s linear infinite;
 }
-.cargando-portada img{
+@keyframes vinilo{ to{ transform:rotate(360deg); } }
+
+/* Surcos: anillos finos, más juntos hacia el borde. */
+.cargando-surcos{
+  position:absolute; inset:0; border-radius:50%;
+  background:repeating-radial-gradient(circle at 50% 50%,
+    rgba(255,255,255,.055) 0 1px,
+    rgba(255,255,255,0) 1px 4px);
+}
+
+/* El destello que cruza el disco: es lo que lo hace leer como vinilo y no
+   como un círculo negro. */
+.cargando-reflejo{
+  position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 210deg at 50% 50%,
+    rgba(255,255,255,0) 0deg,
+    rgba(255,255,255,.14) 28deg,
+    rgba(194,58,82,.16) 46deg,
+    rgba(255,255,255,0) 84deg,
+    rgba(255,255,255,0) 190deg,
+    rgba(255,255,255,.10) 214deg,
+    rgba(255,255,255,0) 268deg);
+  mix-blend-mode:screen;
+}
+
+/* La etiqueta del centro: ahí va la portada del último lanzamiento. */
+.cargando-etiqueta{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:38%; aspect-ratio:1; border-radius:50%; overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 6px 18px -8px rgba(0,0,0,.9);
+}
+.cargando-etiqueta img{
   position:absolute; inset:0; width:100%; height:100%;
-  object-fit:cover; filter:grayscale(.3) contrast(1.05) brightness(.78);
+  object-fit:cover; filter:grayscale(.2) contrast(1.05) brightness(.9);
 }
-.cargando-brillo{
-  position:absolute; inset:0;
-  background:radial-gradient(60% 50% at 50% 55%, var(--wine-900) 0%, transparent 70%);
-  mix-blend-mode:screen; opacity:.4;
+.cargando-agujero{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:12%; aspect-ratio:1; border-radius:50%;
+  background:var(--surface-950);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);
 }
+
+/* El nombre del disco va DEBAJO, fuera del vinilo: encima giraría con él y
+   sería ilegible. */
 .cargando-meta{
-  position:absolute; left:0; right:0; bottom:0; padding:28px 14px 14px;
-  background:linear-gradient(0deg, rgba(10,9,8,.96) 45%, rgba(10,9,8,.7) 72%, transparent 100%);
+  margin-top:18px; text-align:center;
 }
 .cargando-titulo{
   display:block; font-family:var(--font-display); font-size:20px; color:var(--bone-100);
@@ -124,6 +162,7 @@
 /* Quien pidió menos movimiento se salta el giro, el zoom y el destello. */
 @media (prefers-reduced-motion: reduce){
   .cargando-cuadro{ transition:none; }
+  .cargando-vinilo{ animation:none; }
   .cargando.saliendo .cargando-cuadro,
   .cargando.saliendo .cargando-destello{ animation:none; }
   .cargando.saliendo{ animation:cargandoDesvanecer .4s ease forwards; }

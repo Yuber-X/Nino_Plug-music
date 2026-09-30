@@ -37,8 +37,8 @@ scripts             generar-tokens.py
 - [ ] Biografía real (la actual es borrador y se ve marcada)
 - [ ] Enlace de Spotify
 - [ ] Definir hospedaje de los videos oficiales
-- [ ] 🔴 Comprar la licencia comercial de **Darkhusk** (masyafistudio.com) o
-      cambiar la tipografía del título: la que está es de uso personal
+- [ ] Confirmar con el cliente la tipografía del título (hoy **Eater**, libre;
+      se comparan con `?fuente=nosifer`, `metalmania`, `pirata`)
 - [ ] Portadas: varias son fotos claras — revisar con el cliente cuáles van al sitio
 
 Detalle de decisiones y convenciones: [`CLAUDE.md`](CLAUDE.md).

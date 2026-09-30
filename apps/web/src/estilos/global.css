@@ -408,3 +408,33 @@ footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-
   padding-top:34px;
   background:linear-gradient(0deg, rgba(10,9,8,.96) 45%, rgba(10,9,8,.7) 72%, transparent 100%);
 }
+
+/* ---------- fondo de video de la portada (2026-09-29) ---------- */
+
+/* El clip va al fondo del todo; encima van la capa oscura, la de vino y recién
+   después el título 3D. Ese orden es el pedido del cliente: video "debajo del
+   texto 3D y de la capa rojiza". */
+.fondo-video{ position:absolute; inset:0; overflow:hidden; z-index:0; pointer-events:none; }
+.fondo-video video{
+  /* width/height al 100% + object-fit:cover. Con min-width/height y auto
+     quedaban bandas negras a los lados cuando la ventana era más ancha que el
+     clip (2026-09-29). */
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; filter:grayscale(.55) contrast(1.15) brightness(.5);
+}
+.fondo-video-oscuro{ position:absolute; inset:0; background:rgba(10,9,8,.55); }
+.fondo-video-vino{
+  position:absolute; inset:0;
+  background:radial-gradient(90% 60% at 50% 42%, var(--wine-900) 0%, transparent 62%);
+  mix-blend-mode:screen; opacity:.85;
+}
+
+/* El contenido de la portada va por encima del video.
+   La pista de scroll queda FUERA de la regla a propósito: ya está posicionada
+   en la esquina, y volverla relativa la mandaba al medio, encima del botón
+   (pasó el 2026-09-29). */
+.hero > *:not(.fondo-video):not(.scroll-cue){ position:relative; z-index:1; }
+.hero > .scroll-cue{ z-index:1; }
+
+/* El dato del lanzamiento ahora va debajo del nombre. */
+.kicker-bajo{ margin:18px 0 0; }

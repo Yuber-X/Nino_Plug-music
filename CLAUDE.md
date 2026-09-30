@@ -81,6 +81,39 @@ con degradado:
 
 ---
 
+## 2.2. Pantalla de carga y entrada (2026-09-29)
+
+La carga no es una barra decorativa: mide descargas reales (los clips del
+fondo, la tipografía 3D, las portadas y el primer adelanto de audio). Tiene un
+piso de ~2,6 s porque con todo en caché la barra llega a 100% en un parpadeo y
+la animación no se ve.
+
+- Los puntos de arriba del cuadro se estiran hasta volverse líneas; al
+  completarse la fila, el cuadro gira 90° y la fila vuelve a empezar sobre el
+  lado que quedó arriba. Cuatro vueltas = 360°.
+- Junto al puntero se lee `loading...` y al terminar `click para continuar`.
+  Ese click es además el gesto que el navegador exige para dejar sonar audio:
+  por eso la música entra ahí, **subiendo de a poco** (`entrarSuave`).
+- `?carga=0.35` congela la barra en ese punto para poder trabajar el diseño.
+
+## 2.3. El fondo de la portada
+
+Dos recortes de 8 s de los videos oficiales (*24/7* y *Tengo que ganar*), sin
+audio, 1,8 MB los dos, en bucle alternado. El cliente los pidió "como gif": se
+hicieron en MP4 porque un gif del mismo trozo pesa veinte veces más y se ve
+peor. Se recortan con ffmpeg:
+
+```powershell
+ffmpeg -ss 15 -i "24 7 (Video Oficial).mp4" -t 8 -an ^
+  -vf "scale=1280:-2,fps=24" -c:v libx264 -preset slow -crf 30 ^
+  -pix_fmt yuv420p -movflags +faststart apps/web/public/clips/247.mp4
+```
+
+Van al repositorio a propósito (hay una excepción en `.gitignore`): el sitio no
+arranca sin ellos y pesan menos que una foto.
+
+---
+
 ## 3. Sistema de diseño
 
 `design-system/` es la fuente de verdad: colores, tipografías, espaciado, radios
@@ -146,8 +179,12 @@ Vive en `Freelancer - Claude Active\Web\Nino_Plug-music-repertorio\`:
 - Videos oficiales (`.mp4`, 25–40 MB cada uno) — **no van al repositorio**.
   Definir hospedaje (YouTube embebido o CDN) antes de la sección de videos.
 - Fotos y el logo del cliente.
-- Tipografías `Darkhusk.otf` y `MecaGothix.ttf` — revisar licencia antes de
-  publicarlas en la web.
+- 🔴 **`Darkhusk.otf` es SOLO PARA USO PERSONAL.** Es la tipografía del título
+  3D desde el 2026-09-29, por pedido del cliente. Publicar el sitio del artista
+  con ella es uso comercial: hay que **comprar la licencia en
+  masyafistudio.com** antes de salir a producción, o cambiarla. El texto de la
+  licencia está copiado en `apps/web/public/fuentes/LICENCIA-Darkhusk.txt`.
+  `MecaGothix.ttf` todavía no se usa; revisar su licencia antes.
 - Capturas de las referencias.
 
 ---

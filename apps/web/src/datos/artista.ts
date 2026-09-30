@@ -33,6 +33,7 @@ export const artista = {
   generos: ['Trap', 'Rap', 'Dembow'],
   desde: 2020,
   enlaces: {
+    spotify: 'https://open.spotify.com/artist/0033j8X0gIpMgGcZPksvMA',
     instagram: 'https://www.instagram.com/skinny.xander/',
     youtube: 'https://www.youtube.com/channel/UC6oo-8F1Y5wkpSe3wzPzNOg',
     appleMusic: 'https://music.apple.com/us/artist/skinny-xander/1357803085',

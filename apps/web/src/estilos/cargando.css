@@ -1,0 +1,130 @@
+/* ============================================================
+   Pantalla de carga + salida hacia la portada
+   Rehecha el 2026-09-29 sobre las capturas del cliente.
+   ============================================================ */
+
+.cargando{
+  position:fixed; inset:0; z-index:1000;
+  display:grid; place-items:center;
+  background:var(--surface-950);
+  cursor:none;                 /* el puntero lo reemplaza la etiqueta */
+  transition:opacity .5s ease;
+}
+.cargando.listo{ cursor:pointer; }
+
+.cargando-centro{
+  position:relative;
+  display:flex; flex-direction:column; align-items:center; gap:22px;
+}
+
+/* El cuadro que gira 90° en cada vuelta de la barra. */
+.cargando-cuadro{
+  position:relative;
+  width:min(46vw, 320px);
+  transition:transform .9s cubic-bezier(.65,0,.2,1);
+  transform-origin:50% 50%;
+}
+
+/* ---- la fila de puntos que se vuelven líneas ---- */
+.cargando-barra{
+  position:absolute; left:0; right:0; top:-16px;
+  display:flex; align-items:center; justify-content:space-between;
+  height:8px;
+}
+.cargando-punto{
+  /* El punto ES la línea: crece a lo ancho según --estirado (0 a 1). Animar el
+     ancho de un span y no cambiar de elemento evita que el navegador rearme la
+     fila veintiséis veces por cuadro. */
+  display:block;
+  height:2px;
+  width:calc(2px + var(--estirado, 0) * 9px);
+  background:var(--bone-100);
+  opacity:calc(.35 + var(--estirado, 0) * .65);
+  transition:width .18s linear, opacity .18s linear;
+}
+
+/* ---- la portada dentro del cuadro ---- */
+.cargando-portada{
+  position:relative; aspect-ratio:1; overflow:hidden;
+  border:1px solid var(--line);
+  background:var(--surface-800);
+}
+.cargando-portada img{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; filter:grayscale(.3) contrast(1.05) brightness(.78);
+}
+.cargando-brillo{
+  position:absolute; inset:0;
+  background:radial-gradient(60% 50% at 50% 55%, var(--wine-900) 0%, transparent 70%);
+  mix-blend-mode:screen; opacity:.4;
+}
+.cargando-meta{
+  position:absolute; left:0; right:0; bottom:0; padding:28px 14px 14px;
+  background:linear-gradient(0deg, rgba(10,9,8,.96) 45%, rgba(10,9,8,.7) 72%, transparent 100%);
+}
+.cargando-titulo{
+  display:block; font-family:var(--font-display); font-size:20px; color:var(--bone-100);
+}
+.cargando-artista{
+  display:block; margin-top:2px;
+  font-family:var(--font-mono); font-size:9px; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--ash-300);
+}
+
+.cargando-cifra{
+  font-family:var(--font-mono); font-size:13px; letter-spacing:.14em;
+  color:var(--ash-500);
+}
+
+/* ---- la etiqueta que sigue al puntero ---- */
+.etiqueta-cursor{
+  position:fixed; top:0; left:0; z-index:1200;
+  pointer-events:none; opacity:0;
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--bone-100);
+  text-shadow:0 0 12px rgba(0,0,0,.9);
+  transition:opacity .3s ease;
+  will-change:transform;
+}
+.etiqueta-cursor.visible{ opacity:1; }
+
+/* ---- la salida ---- */
+.cargando.saliendo{ pointer-events:none; }
+
+/* El cuadro se va hacia la cámara y se desvanece: la portada "entra" en la
+   pantalla en vez de simplemente apagarse. */
+.cargando.saliendo .cargando-cuadro{
+  animation:cargandoEntrar 1s cubic-bezier(.7,0,.2,1) forwards;
+}
+@keyframes cargandoEntrar{
+  0%{ transform:scale(1) rotate(0deg); opacity:1; }
+  55%{ transform:scale(1.35) rotate(-4deg); opacity:1; }
+  100%{ transform:scale(7) rotate(-8deg); opacity:0; filter:blur(14px); }
+}
+.cargando.saliendo .cargando-cifra,
+.cargando.saliendo .cargando-barra{ animation:cargandoApagar .35s ease forwards; }
+@keyframes cargandoApagar{ to{ opacity:0; transform:translateY(-8px); } }
+
+/* El barrido blanco: dura poco y es lo que corta entre una pantalla y la otra. */
+.cargando-destello{
+  position:absolute; inset:0; background:var(--bone-100);
+  opacity:0; pointer-events:none;
+}
+.cargando.saliendo .cargando-destello{
+  animation:cargandoDestello .9s ease-out forwards;
+}
+@keyframes cargandoDestello{
+  0%{ opacity:0; }
+  45%{ opacity:.85; }
+  100%{ opacity:0; }
+}
+.cargando.saliendo{ animation:cargandoDesvanecer 1.1s ease forwards; }
+@keyframes cargandoDesvanecer{ to{ opacity:0; visibility:hidden; } }
+
+/* Quien pidió menos movimiento se salta el giro, el zoom y el destello. */
+@media (prefers-reduced-motion: reduce){
+  .cargando-cuadro{ transition:none; }
+  .cargando.saliendo .cargando-cuadro,
+  .cargando.saliendo .cargando-destello{ animation:none; }
+  .cargando.saliendo{ animation:cargandoDesvanecer .4s ease forwards; }
+}

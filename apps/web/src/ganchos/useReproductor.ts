@@ -19,6 +19,8 @@ export interface EstadoReproductor {
   alternar: () => void;
   elegir: (indice: number) => void;
   siguiente: () => void;
+  /** Arranca el tema subiendo el volumen de a poco (entrada del sitio). */
+  entrarSuave: (segundos?: number) => void;
 }
 
 export function useReproductor(): EstadoReproductor {
@@ -72,6 +74,28 @@ export function useReproductor(): EstadoReproductor {
 
   const alternar = useCallback(() => setSonando((s) => !s), []);
 
+  /**
+   * Entrada gradual: la música no arranca de golpe a todo volumen cuando el
+   * visitante entra, sube en los primeros segundos mientras aparece la
+   * portada. Un golpe de audio al pasar la puerta hace que la gente cierre la
+   * pestaña antes de ver nada.
+   */
+  const entrarSuave = useCallback((segundos = 3) => {
+    const el = audio.current;
+    if (!el) return;
+
+    el.volume = 0;
+    setSonando(true);
+
+    const inicio = performance.now();
+    const subir = () => {
+      const t = Math.min(1, (performance.now() - inicio) / (segundos * 1000));
+      el.volume = t * t;   // curva suave: al oído, lineal sube demasiado rápido
+      if (t < 1) requestAnimationFrame(subir);
+    };
+    requestAnimationFrame(subir);
+  }, []);
+
   const elegir = useCallback((nuevo: number) => {
     setIndice((actual) => {
       if (actual === nuevo) {
@@ -99,8 +123,9 @@ export function useReproductor(): EstadoReproductor {
       alternar,
       elegir,
       siguiente,
+      entrarSuave,
     }),
-    [temaActual, indice, sonando, tiempo, duracion, alternar, elegir, siguiente],
+    [temaActual, indice, sonando, tiempo, duracion, alternar, elegir, siguiente, entrarSuave],
   );
 }
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Lenis from 'lenis';
 
-import { Intro } from './componentes/Intro';
+import { Cargando } from './componentes/Cargando';
 import { Nav } from './componentes/Nav';
 import { MiniReproductor } from './componentes/MiniReproductor';
 import { Hero } from './secciones/Hero';
@@ -13,11 +13,12 @@ import { useReproductor } from './ganchos/useReproductor';
 
 import './estilos/tokens.css';
 import './estilos/global.css';
+import './estilos/cargando.css';
 
 export default function App() {
-  // ?entrar salta la puerta de entrada. Es para trabajar: al recargar cien
-  // veces mientras se ajusta una sección, hacer click en el disco cada vez
-  // cansa. En produccion nadie llega con ese parametro.
+  // ?entrar salta la pantalla de carga. Es para trabajar: al recargar cien
+  // veces mientras se ajusta una sección, esperar la barra cada vez cansa.
+  // En producción nadie llega con ese parámetro.
   const saltarIntro =
     typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('entrar');
 
@@ -61,13 +62,14 @@ export default function App() {
 
   const entrar = () => {
     setEntro(true);
-    // El click del intro es el gesto que habilita el audio en el navegador.
-    reproductor.elegir(0);
+    // El click de la pantalla de carga es el gesto que habilita el audio en el
+    // navegador; la música entra subiendo mientras aparece la portada.
+    reproductor.entrarSuave(3.5);
   };
 
   return (
     <>
-      {!saltarIntro && <Intro alEntrar={entrar} />}
+      {!saltarIntro && <Cargando alEntrar={entrar} />}
       <Nav />
       <main>
         <Hero entro={entro} />

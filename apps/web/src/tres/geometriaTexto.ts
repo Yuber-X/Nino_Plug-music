@@ -38,6 +38,12 @@ export interface OpcionesTexto {
   espesor?: number;
   /** Suavizado de las curvas. Más segmentos = más triángulos. */
   segmentosCurva?: number;
+  /**
+   * Cuánto se arquea el texto, como en ascension.pegassi.be: 0 es recto y 1 es
+   * una curva marcada. Las letras de los extremos suben y giran hacia el
+   * centro, como si estuvieran pegadas a un arco.
+   */
+  arco?: number;
 }
 
 /**
@@ -50,7 +56,7 @@ export interface OpcionesTexto {
 export function geometriaDeTexto(
   fuente: opentype.Font,
   texto: string,
-  { tamano = 1, espesor = 0.18, segmentosCurva = 8 }: OpcionesTexto = {},
+  { tamano = 1, espesor = 0.18, segmentosCurva = 8, arco = 0 }: OpcionesTexto = {},
 ): THREE.ExtrudeGeometry {
   // opentype trabaja en unidades de la fuente y con la Y hacia abajo; el mundo
   // 3D la tiene hacia arriba. Se dibuja a escala 1 y se corrige al final.
@@ -93,6 +99,44 @@ export function geometriaDeTexto(
 
   geometria.scale(escala, escala, escala);
   geometria.center();
+
+  if (arco > 0) arquear(geometria, arco);
+
   geometria.computeVertexNormals();
   return geometria;
+}
+
+/**
+ * Dobla la geometría sobre un arco.
+ *
+ * Se hace moviendo los vértices, no rotando la malla: cada letra tiene que
+ * girar un poco MÁS que la anterior según lo lejos que esté del centro, que es
+ * lo que hace que el texto se lea curvo y no simplemente inclinado. Rotar el
+ * bloque entero lo dejaría recto y torcido, que es otra cosa.
+ */
+function arquear(geometria: THREE.ExtrudeGeometry, intensidad: number) {
+  geometria.computeBoundingBox();
+  const caja = geometria.boundingBox;
+  if (!caja) return;
+
+  const mitadAncho = Math.max(1e-6, (caja.max.x - caja.min.x) / 2);
+  // Radio del arco: cuanto más intenso, más chico el radio y más pronunciada
+  // la curva. El 2.6 sale de probar contra la referencia.
+  const radio = mitadAncho / Math.max(0.001, intensidad * 0.9) * 2.6;
+
+  const pos = geometria.attributes.position;
+  const v = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    const angulo = v.x / radio;
+    const distancia = radio - v.y;
+    pos.setXYZ(
+      i,
+      Math.sin(angulo) * distancia,
+      radio - Math.cos(angulo) * distancia,
+      v.z,
+    );
+  }
+  pos.needsUpdate = true;
+  geometria.center();
 }

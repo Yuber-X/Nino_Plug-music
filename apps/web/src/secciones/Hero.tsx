@@ -1,7 +1,8 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
-import { temas } from '../datos/artista';
+import { artista, temas } from '../datos/artista';
 import { hayWebGL } from '../tres/webgl';
+import { FondoVideo } from './FondoVideo';
 
 /**
  * three.js + drei pesan más que todo el resto del sitio junto. Cargándolos
@@ -16,8 +17,12 @@ const TituloCromado = lazy(() =>
 const NOMBRE = 'SKINNY XANDER';
 
 /**
- * Portada: el nombre del artista en metal, girando al entrar y siguiendo al
- * mouse después.
+ * Portada.
+ *
+ * Ajustes pedidos por el cliente el 2026-09-29: fuera la bajada de texto, el
+ * botón de reproducir y los destellos ("le da un toque infantil"); el dato del
+ * último sencillo pasa a estar DEBAJO del nombre; y detrás de todo van los
+ * clips del video oficial.
  *
  * Hay DOS versiones del título y no es indecisión:
  *  · La 3D real (three.js) es la buena, la que pidió el cliente.
@@ -38,7 +43,7 @@ export function Hero({ entro }: { entro: boolean }) {
     setTres(hayWebGL() && !reducido);
   }, []);
 
-  // ---- Respaldo en CSS: mismo tilt del prototipo ----
+  // ---- Respaldo en CSS: mismo tilt del prototipo, ya contenido ----
   useEffect(() => {
     if (tres) return;
     const stage = escenario.current;
@@ -60,10 +65,10 @@ export function Hero({ entro }: { entro: boolean }) {
       const dy = py - 0.5;
       h1.style.setProperty('--mx', `${px * 100}%`);
       h1.style.setProperty('--my', `${py * 100}%`);
-      h1.style.setProperty('--ry', `${dx * 16}deg`);
-      h1.style.setProperty('--rx', `${-dy * 14}deg`);
-      h1.style.setProperty('--sx', `${-dx * 22}px`);
-      h1.style.setProperty('--sy', `${10 + dy * 18}px`);
+      h1.style.setProperty('--ry', `${dx * 9}deg`);
+      h1.style.setProperty('--rx', `${-dy * 7}deg`);
+      h1.style.setProperty('--sx', `${-dx * 14}px`);
+      h1.style.setProperty('--sy', `${10 + dy * 12}px`);
     };
     const salir = () => {
       h1.style.setProperty('--rx', '0deg');
@@ -97,9 +102,7 @@ export function Hero({ entro }: { entro: boolean }) {
 
   return (
     <section className="hero" id="hero">
-      <div className="kicker">
-        Último sencillo · {ultimo.titulo} · {anio}
-      </div>
+      <FondoVideo activo={entro} />
 
       <div className={tres ? 'title-stage title-3d' : 'title-stage'} ref={escenario}>
         {tres ? (
@@ -114,28 +117,22 @@ export function Hero({ entro }: { entro: boolean }) {
         {/* El nombre siempre está en el HTML, aunque la portada sea un canvas:
             es lo que leen Google y un lector de pantalla. */}
         {tres && <h1 className="solo-lectores">{NOMBRE}</h1>}
-
-        <span className="sparkle" style={{ top: '6%', left: '2%', fontSize: 22 }}>
-          ✦
-        </span>
-        <span
-          className="sparkle"
-          style={{ bottom: '10%', right: '4%', fontSize: 15, animationDelay: '1.3s' }}
-        >
-          ✦
-        </span>
       </div>
 
-      <p className="sub">
-        Trap, rap y dembow desde República Dominicana. Sonido crudo, visuales oscuros, sin filtro.
-      </p>
+      {/* El dato del lanzamiento va DEBAJO del nombre (pedido 2026-09-29):
+          arriba competía con el título. */}
+      <div className="kicker kicker-bajo">
+        Último sencillo · {ultimo.titulo} · {anio}
+      </div>
 
       <div className="hero-actions">
-        <a className="btn btn-primary" href="#musica">
-          ▶ Reproducir ahora
-        </a>
-        <a className="btn btn-ghost" href="#videos">
-          Ver videos
+        <a
+          className="btn btn-ghost"
+          href={artista.enlaces.spotify}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Ver Spotify
         </a>
       </div>
 

@@ -7,9 +7,12 @@ build/
 .env.*
 !.env.example
 
-# Material pesado del cliente (videos y fotos): vive en Claude Active, no acá
+# Material pesado del cliente (videos y fotos): vive en Claude Active, no acá.
+# Los clips de fondo SÍ van: son recortes de 8 s del video oficial, pesan
+# menos de 1 MB cada uno y el sitio no arranca sin ellos.
 *.mp4
 *.mov
+!apps/web/public/clips/*.mp4
 
 .DS_Store
 Thumbs.db

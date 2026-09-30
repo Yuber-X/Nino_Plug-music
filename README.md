@@ -37,7 +37,8 @@ scripts             generar-tokens.py
 - [ ] Biografía real (la actual es borrador y se ve marcada)
 - [ ] Enlace de Spotify
 - [ ] Definir hospedaje de los videos oficiales
-- [ ] Revisar licencia de las tipografías Darkhusk y MecaGothix
+- [ ] 🔴 Comprar la licencia comercial de **Darkhusk** (masyafistudio.com) o
+      cambiar la tipografía del título: la que está es de uso personal
 - [ ] Portadas: varias son fotos claras — revisar con el cliente cuáles van al sitio
 
 Detalle de decisiones y convenciones: [`CLAUDE.md`](CLAUDE.md).

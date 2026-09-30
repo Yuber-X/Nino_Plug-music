@@ -16,10 +16,14 @@ import { cargarFuente, geometriaDeTexto } from './geometriaTexto';
  * Se cambia con ?fuente=nombre, para poder mirarlas una al lado de la otra.
  */
 const FUENTES: Record<string, string> = {
+  maguntia: '/fuentes/UnifrakturMaguntia-Book.ttf',
+  cook: '/fuentes/UnifrakturCook-Bold.ttf',
+  rocker: '/fuentes/NewRocker-Regular.ttf',
   metalmania: '/fuentes/MetalMania-Regular.ttf',
   nosifer: '/fuentes/Nosifer-Regular.ttf',
   eater: '/fuentes/Eater-Regular.ttf',
   pirata: '/fuentes/PirataOne-Regular.ttf',
+  lodger: '/fuentes/JollyLodger-Regular.ttf',
   // Darkhusk NO viaja en el repositorio: es de uso personal y subirla a un
   // repositorio público sería redistribuirla. Para compararla, copiar el .otf
   // desde "Claude Active\Web\...\Fuentes" a apps/web/public/fuentes/ y
@@ -28,10 +32,12 @@ const FUENTES: Record<string, string> = {
 };
 
 /**
- * La que usa el sitio hoy: Eater es la más parecida a Darkhusk de las libres
- * —letras con púas, del palo death metal— y no cuesta nada publicarla.
+ * La que usa el sitio hoy. Eater no gustó (2026-09-30): Unifraktur Cook es la
+ * blackletter gruesa de las portadas de metal y de las carátulas de trap
+ * oscuro, y con el título grande es la que mejor aguanta. Todas las de la
+ * lista son libres para uso comercial.
  */
-const FUENTE_POR_DEFECTO = 'eater';
+const FUENTE_POR_DEFECTO = 'cook';
 
 function fuenteElegida(): string {
   if (typeof window === 'undefined') return FUENTES[FUENTE_POR_DEFECTO];
@@ -59,6 +65,78 @@ interface Props {
 /** Tope de inclinación. Más que esto y las letras de la punta salen de cuadro. */
 const GIRO_MAX_Y = 0.16;   // ~9°
 const GIRO_MAX_X = 0.09;   // ~5°
+
+/**
+ * El reflejo que recorre las letras.
+ *
+ * Es una luz alargada que cruza de lado a lado por delante del texto: al
+ * pasar, el metal la devuelve como un destello que viaja. Solo toca al título
+ * —es un reflejo del material, no un filtro sobre la pantalla—, que es
+ * exactamente lo que pidió el cliente: que brille el texto, no la página.
+ */
+function DestelloViajero() {
+  const luz = useRef<THREE.PointLight>(null);
+
+  useFrame((estado) => {
+    const l = luz.current;
+    if (!l) return;
+
+    // Una pasada cada 5,5 s, de izquierda a derecha, bien cerca del texto. El
+    // resto del ciclo la luz se queda afuera de cuadro y apagada: un brillo
+    // permanente deja de ser un brillo.
+    const ciclo = 5.5;
+    const t = (estado.clock.elapsedTime % ciclo) / ciclo;
+    const cruzando = t < 0.55;
+    const avance = cruzando ? t / 0.55 : 1;
+
+    l.position.set(-2.6 + avance * 5.2, 0.35, 1.25);
+    l.intensity = cruzando ? 26 * Math.sin(avance * Math.PI) : 0;
+  });
+
+  // Una luz puntual y no un panel del ambiente: en PBR el metal refleja el
+  // ambiente por igual en toda la cara plana, así que un panel más grande solo
+  // aclaraba las letras enteras. La luz puntual deja un reflejo chico que SÍ
+  // se ve viajar por los trazos (probado el 2026-09-30).
+  return <pointLight ref={luz} color="#ffffff" distance={9} decay={1.1} intensity={0} />;
+}
+
+/**
+ * Una franja blanca angosta que gira alrededor del título.
+ *
+ * Es lo que hace que el reflejo cambie según la inclinación de cada trazo: con
+ * un ambiente parejo, todas las caras del metal devuelven lo mismo y la plata
+ * se ve como pintura gris. La franja da el contraste; la luz viajera pone el
+ * golpe de brillo.
+ */
+function FranjaGiratoria() {
+  const grupo = useRef<THREE.Group>(null);
+
+  useFrame((estado, delta) => {
+    if (grupo.current) grupo.current.rotation.z += delta * 0.35;
+    void estado;
+  });
+
+  return (
+    <group ref={grupo}>
+      <Lightformer
+        form="rect"
+        intensity={9}
+        position={[0, 0, 4]}
+        rotation={[0, 0, Math.PI / 3]}
+        scale={[0.9, 14, 1]}
+        color="#ffffff"
+      />
+      <Lightformer
+        form="rect"
+        intensity={4}
+        position={[0, 0, 4]}
+        rotation={[0, 0, -Math.PI / 6]}
+        scale={[0.5, 14, 1]}
+        color="#c23a52"
+      />
+    </group>
+  );
+}
 
 function Letras({ texto, entro }: Props) {
   const malla = useRef<THREE.Mesh>(null);
@@ -130,22 +208,26 @@ function Letras({ texto, entro }: Props) {
   const ancho = geometria.boundingBox
     ? geometria.boundingBox.max.x - geometria.boundingBox.min.x
     : 1;
-  // 0.78 del ancho visible: el resto es el aire que necesita para inclinarse
-  // sin tocar los bordes.
-  const escala = Math.min((viewport.width * 0.78) / ancho, viewport.height * 0.52);
+  // 0.92 del ancho visible: el cliente lo quiere grande y ocupando la pantalla
+  // (2026-09-30). El 8% que queda es el aire que necesita para inclinarse sin
+  // tocar los bordes — el giro ya está topeado, así que alcanza.
+  const escala = Math.min((viewport.width * 0.92) / ancho, viewport.height * 0.72);
 
   return (
     <group scale={escala}>
       <mesh ref={malla} geometry={geometria}>
         {/* Plateado espejo: casi sin rugosidad, para que el reflejo blanco se
             lea como brillo de cromo pulido y no como pintura gris. */}
+        {/* Plata pulida: rugosidad casi nula para que el destello viajero se
+            lea como un reflejo que corre por el canto, y no como una mancha
+            clara pegada a la letra. */}
         <meshPhysicalMaterial
-          color="#f2f2f2"
+          color="#c9c9cf"
           metalness={1}
-          roughness={0.08}
+          roughness={0.11}
           clearcoat={1}
-          clearcoatRoughness={0.04}
-          envMapIntensity={2}
+          clearcoatRoughness={0.03}
+          envMapIntensity={1.35}
         />
       </mesh>
     </group>
@@ -164,16 +246,22 @@ export function TituloCromado({ texto, entro }: Props) {
         {/* Cromo: la mayor parte del reflejo es BLANCO. El vino entra solo por
             los costados, como luz de sala — con el vino de frente las letras
             dejan de ser metal y se ven pintadas de rojo. */}
-        <Lightformer intensity={10} position={[0, 3, 2]} scale={[12, 4, 1]} color="#ffffff" />
-        <Lightformer intensity={6} position={[0, -3, 2]} scale={[12, 3, 1]} color="#dcdcdc" />
+        <Lightformer intensity={4} position={[0, 3, 2]} scale={[12, 4, 1]} color="#ffffff" />
+        <Lightformer intensity={2.2} position={[0, -3, 2]} scale={[12, 3, 1]} color="#b9b9bd" />
         <Lightformer intensity={2.5} position={[-4, 0, 2]} scale={[2, 6, 1]} color="#c23a52" />
         <Lightformer intensity={1.8} position={[4, 0, 2]} scale={[2, 6, 1]} color="#86192c" />
         {/* La "softbox" de adelante: es la que ven las caras planas de las
             letras. Sin ella el frente refleja el fondo negro y el título se
             lee como una silueta apagada en vez de cromo. */}
-        <Lightformer intensity={5} position={[0, 0, 5]} scale={[14, 8, 1]} color="#ffffff" />
+        {/* La softbox de adelante baja a la mitad: con ella al máximo las caras
+            quedaban blancas de punta a punta y el destello viajero no se veía
+            pasar — no había dónde brillar (2026-09-30). */}
+        <Lightformer intensity={1.7} position={[0, 0, 5]} scale={[14, 8, 1]} color="#ffffff" />
         <Lightformer intensity={1} position={[0, 0, -4]} scale={[10, 6, 1]} color="#1c1917" />
       </Environment>
+
+      <FranjaGiratoria />
+      <DestelloViajero />
 
       <ambientLight intensity={0.4} />
       <directionalLight position={[2, 3, 4]} intensity={1.2} />

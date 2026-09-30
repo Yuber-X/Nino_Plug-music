@@ -56,7 +56,7 @@ export default function App() {
       },
       { rootMargin: '0px 0px -12% 0px' },
     );
-    for (const el of document.querySelectorAll('.reveal')) observador.observe(el);
+    for (const el of Array.from(document.querySelectorAll('.reveal'))) observador.observe(el);
     return () => observador.disconnect();
   }, []);
 

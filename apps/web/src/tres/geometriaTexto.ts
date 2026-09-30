@@ -90,10 +90,14 @@ export function geometriaDeTexto(
   const geometria = new THREE.ExtrudeGeometry(formas, {
     depth: (espesor * fuente.unitsPerEm) / 1,
     bevelEnabled: true,
-    bevelThickness: fuente.unitsPerEm * 0.012,
-    bevelSize: fuente.unitsPerEm * 0.012,
+    // Bisel generoso: en una cara plana el metal refleja lo mismo en toda su
+    // superficie y el brillo no se ve moverse. El canto redondeado es el que
+    // atrapa la luz y hace que el destello CORRA por el contorno de la letra
+    // (2026-09-30).
+    bevelThickness: fuente.unitsPerEm * 0.03,
+    bevelSize: fuente.unitsPerEm * 0.028,
     bevelOffset: 0,
-    bevelSegments: 3,
+    bevelSegments: 5,
     curveSegments: segmentosCurva,
   });
 

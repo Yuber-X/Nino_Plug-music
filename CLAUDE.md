@@ -89,10 +89,14 @@ parecida de las libres— y quedan otras tres cargadas para comparar en vivo:
 
 | `?fuente=` | Tipografía | Licencia | Pinta |
 |---|---|---|---|
-| `eater` *(la actual)* | Eater | OFL, libre | Púas; la más cercana a Darkhusk |
-| `nosifer` | Nosifer | OFL, libre | Goteada, de terror |
+| `cook` *(la actual)* | Unifraktur Cook | OFL, libre | Blackletter gruesa, de portada de metal |
+| `maguntia` | Unifraktur Maguntia | OFL, libre | Blackletter clásica, más fina |
+| `rocker` | New Rocker | OFL, libre | Gótica de remates filosos |
 | `metalmania` | Metal Mania | OFL, libre | Trazo rugoso de banda |
+| `nosifer` | Nosifer | OFL, libre | Goteada, de terror |
+| `eater` | Eater | OFL, libre | Púas (descartada por el cliente) |
 | `pirata` | Pirata One | OFL, libre | Gótica / blackletter |
+| `lodger` | Jolly Lodger | OFL, libre | Flaca, de cartel viejo |
 
 OFL (SIL Open Font License) permite usarlas en un sitio comercial sin pagar y
 sin pedir permiso.

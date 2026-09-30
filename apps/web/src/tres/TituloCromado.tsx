@@ -62,9 +62,22 @@ interface Props {
   entro: boolean;
 }
 
-/** Tope de inclinación. Más que esto y las letras de la punta salen de cuadro. */
-const GIRO_MAX_Y = 0.16;   // ~9°
-const GIRO_MAX_X = 0.09;   // ~5°
+/**
+ * Tope de inclinación. Bajado a la mitad el 2026-09-30: el cliente pidió que
+ * el título reaccione "un tanto menos" al mouse. Además, cuanto menos gira,
+ * menos aire necesita a los costados para no salirse de cuadro.
+ */
+const GIRO_MAX_Y = 0.085;  // ~5°
+const GIRO_MAX_X = 0.05;   // ~3°
+
+/** Cuánto tarda una vuelta del paseo solo (modo celular), en segundos. */
+const RONDA = 14;
+
+/** ¿Pantalla táctil? Ahí el título no sigue al dedo: se pasea solo. */
+function esTactil(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(hover: none), (pointer: coarse)').matches;
+}
 
 /**
  * El reflejo que recorre las letras.
@@ -89,7 +102,7 @@ function DestelloViajero() {
     const cruzando = t < 0.55;
     const avance = cruzando ? t / 0.55 : 1;
 
-    l.position.set(-2.6 + avance * 5.2, 0.35, 1.25);
+    l.position.set(-4.2 + avance * 8.4, 0.35, 1.25);
     l.intensity = cruzando ? 26 * Math.sin(avance * Math.PI) : 0;
   });
 
@@ -123,7 +136,7 @@ function FranjaGiratoria() {
         intensity={9}
         position={[0, 0, 4]}
         rotation={[0, 0, Math.PI / 3]}
-        scale={[0.9, 14, 1]}
+        scale={[0.9, 20, 1]}
         color="#ffffff"
       />
       <Lightformer
@@ -131,7 +144,7 @@ function FranjaGiratoria() {
         intensity={4}
         position={[0, 0, 4]}
         rotation={[0, 0, -Math.PI / 6]}
-        scale={[0.5, 14, 1]}
+        scale={[0.5, 20, 1]}
         color="#c23a52"
       />
     </group>
@@ -141,7 +154,17 @@ function FranjaGiratoria() {
 function Letras({ texto, entro }: Props) {
   const malla = useRef<THREE.Mesh>(null);
   const [fuente, setFuente] = useState<import('opentype.js').Font | null>(null);
+  const [tactil, setTactil] = useState(esTactil);
   const { viewport } = useThree();
+
+  // Se escucha el cambio: el cliente prueba el modo celular estirando la
+  // ventana, sin recargar.
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: none), (pointer: coarse)');
+    const alCambiar = () => setTactil(mq.matches);
+    mq.addEventListener('change', alCambiar);
+    return () => mq.removeEventListener('change', alCambiar);
+  }, []);
 
   useEffect(() => {
     let vivo = true;
@@ -189,11 +212,24 @@ function Letras({ texto, entro }: Props) {
       return;
     }
 
-    const p = estado.pointer;
-    const objetivoY = THREE.MathUtils.clamp(p.x * GIRO_MAX_Y * 1.6, -GIRO_MAX_Y, GIRO_MAX_Y);
-    const objetivoX = THREE.MathUtils.clamp(-p.y * GIRO_MAX_X * 1.6, -GIRO_MAX_X, GIRO_MAX_X);
+    // En celular no hay puntero que seguir y "seguir el dedo" pelea con el
+    // scroll: el título da vueltas solo, como si el mouse dibujara círculos
+    // alrededor de la zona de interacción (pedido del cliente, 2026-09-30).
+    let objetivoY: number;
+    let objetivoX: number;
+    if (tactil) {
+      const a = (estado.clock.elapsedTime / RONDA) * Math.PI * 2;
+      objetivoY = Math.sin(a) * GIRO_MAX_Y;
+      objetivoX = Math.cos(a) * GIRO_MAX_X;
+    } else {
+      const p = estado.pointer;
+      objetivoY = THREE.MathUtils.clamp(p.x * GIRO_MAX_Y * 1.1, -GIRO_MAX_Y, GIRO_MAX_Y);
+      objetivoX = THREE.MathUtils.clamp(-p.y * GIRO_MAX_X * 1.1, -GIRO_MAX_X, GIRO_MAX_X);
+    }
 
-    const suavizado = 1 - Math.pow(0.0015, delta);
+    // Persigue el objetivo más despacio que antes: el tirón seco era parte de
+    // lo que hacía sentir el título "nervioso".
+    const suavizado = 1 - Math.pow(0.05, delta);
     m.rotation.y = THREE.MathUtils.lerp(m.rotation.y % (Math.PI * 2), objetivoY, suavizado);
     m.rotation.x = THREE.MathUtils.lerp(m.rotation.x, objetivoX, suavizado);
 
@@ -208,10 +244,11 @@ function Letras({ texto, entro }: Props) {
   const ancho = geometria.boundingBox
     ? geometria.boundingBox.max.x - geometria.boundingBox.min.x
     : 1;
-  // 0.92 del ancho visible: el cliente lo quiere grande y ocupando la pantalla
-  // (2026-09-30). El 8% que queda es el aire que necesita para inclinarse sin
-  // tocar los bordes — el giro ya está topeado, así que alcanza.
-  const escala = Math.min((viewport.width * 0.92) / ancho, viewport.height * 0.72);
+  // 0.76 del ancho visible. Parece menos que el 0.92 de antes y es MÁS texto:
+  // el canvas dejó de estar capado en 920 px y ahora mide hasta 1600, así que
+  // el nombre queda un 20% más grande que en la captura del cliente y encima
+  // le sobran unos 200 px de aire a cada lado para inclinarse sin cortarse.
+  const escala = Math.min((viewport.width * 0.76) / ancho, viewport.height * 0.72);
 
   return (
     <group scale={escala}>
@@ -246,18 +283,21 @@ export function TituloCromado({ texto, entro }: Props) {
         {/* Cromo: la mayor parte del reflejo es BLANCO. El vino entra solo por
             los costados, como luz de sala — con el vino de frente las letras
             dejan de ser metal y se ven pintadas de rojo. */}
-        <Lightformer intensity={4} position={[0, 3, 2]} scale={[12, 4, 1]} color="#ffffff" />
-        <Lightformer intensity={2.2} position={[0, -3, 2]} scale={[12, 3, 1]} color="#b9b9bd" />
-        <Lightformer intensity={2.5} position={[-4, 0, 2]} scale={[2, 6, 1]} color="#c23a52" />
-        <Lightformer intensity={1.8} position={[4, 0, 2]} scale={[2, 6, 1]} color="#86192c" />
+        {/* Anchos de sobra y los de vino más afuera: con el título más grande,
+            las últimas letras caían fuera del blanco y quedaban ROJAS en vez de
+            plateadas — se ve en la captura del cliente del 2026-09-30. */}
+        <Lightformer intensity={4} position={[0, 3, 2]} scale={[22, 4, 1]} color="#ffffff" />
+        <Lightformer intensity={2.2} position={[0, -3, 2]} scale={[22, 3, 1]} color="#b9b9bd" />
+        <Lightformer intensity={2.5} position={[-8, 0, 2]} scale={[2, 6, 1]} color="#c23a52" />
+        <Lightformer intensity={1.8} position={[8, 0, 2]} scale={[2, 6, 1]} color="#86192c" />
         {/* La "softbox" de adelante: es la que ven las caras planas de las
             letras. Sin ella el frente refleja el fondo negro y el título se
             lee como una silueta apagada en vez de cromo. */}
         {/* La softbox de adelante baja a la mitad: con ella al máximo las caras
             quedaban blancas de punta a punta y el destello viajero no se veía
             pasar — no había dónde brillar (2026-09-30). */}
-        <Lightformer intensity={1.7} position={[0, 0, 5]} scale={[14, 8, 1]} color="#ffffff" />
-        <Lightformer intensity={1} position={[0, 0, -4]} scale={[10, 6, 1]} color="#1c1917" />
+        <Lightformer intensity={1.7} position={[0, 0, 5]} scale={[24, 9, 1]} color="#ffffff" />
+        <Lightformer intensity={1} position={[0, 0, -4]} scale={[16, 7, 1]} color="#1c1917" />
       </Environment>
 
       <FranjaGiratoria />

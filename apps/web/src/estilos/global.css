@@ -173,13 +173,14 @@ body::before{
   min-height:100svh;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   text-align:center;
-  padding:150px 24px 96px;
+  --sangria:24px;
+  padding:150px var(--sangria) 96px;
   background:
     radial-gradient(90% 60% at var(--mx,50%) var(--my,38%), var(--wine-900) 0%, transparent 60%),
     var(--surface-950);
   overflow:hidden;
 }
-@media(min-width:640px){ .hero{ padding:160px 48px 110px; } }
+@media(min-width:640px){ .hero{ --sangria:48px; padding:160px var(--sangria) 110px; } }
 .kicker{
   font-family:var(--font-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--wine-400); margin-bottom:20px;
@@ -375,9 +376,18 @@ footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-
    la bajada y los botones siguen mandando el alto de la sección, igual que con
    el título en CSS. */
 .title-stage.title-3d{
-  /* Grande y ocupando pantalla (pedido 2026-09-30). */
-  width:min(1500px, 96vw);
-  height:clamp(300px, 46vh, 560px);
+  /* OJO con el max-width de .title-stage: valía 920px y le ganaba al width de
+     acá, así que el canvas medía 920 px con el texto al 92% adentro. De ahí
+     venían las dos cosas que reportó el cliente el 2026-09-30: las letras del
+     final cortadas y el recuadro de la zona de interacción a la vista. */
+  max-width:1600px;
+  /* Ancho de la portada MENOS su padding, y devuelto con margen negativo: así
+     el canvas llega de borde a borde sin empujar la página. Con 100vw a secas
+     el documento quedaba 48 px más ancho que la ventana y en celular todo se
+     veía corrido hacia la derecha (2026-09-30). */
+  width:calc(100% + var(--sangria) * 2);
+  margin-inline:calc(var(--sangria) * -1);
+  height:clamp(340px, 54vh, 620px);
   margin-bottom:4px;
 }
 /* El resplandor del título.
@@ -447,13 +457,13 @@ footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-
      quedaban bandas negras a los lados cuando la ventana era más ancha que el
      clip (2026-09-29). */
   position:absolute; inset:0; width:100%; height:100%;
-  /* Bien apagado: al recortar las bandas negras del clip de 24/7 quedó
-     ocupando toda la pantalla y, con el brillo de antes, los planos claros le
-     robaban el protagonismo al título (2026-09-30). El fondo tiene que
-     sentirse, no leerse. */
-  object-fit:cover; filter:grayscale(.72) contrast(1.05) brightness(.34);
+  /* Apagado, pero no a oscuras: la primera versión estaba tan baja que el
+     cliente no distinguía los clips (2026-09-30). Se subió el brillo y se
+     bajó el gris; el título sigue ganando porque encima quedan las dos capas
+     y porque el brillo del texto es propio. */
+  object-fit:cover; filter:grayscale(.55) contrast(1.06) brightness(.5);
 }
-.fondo-video-oscuro{ position:absolute; inset:0; background:rgba(10,9,8,.68); }
+.fondo-video-oscuro{ position:absolute; inset:0; background:rgba(10,9,8,.56); }
 .fondo-video-vino{
   position:absolute; inset:0;
   background:radial-gradient(90% 60% at 50% 42%, var(--wine-900) 0%, transparent 62%);
@@ -469,3 +479,22 @@ footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-
 
 /* El dato del lanzamiento ahora va debajo del nombre. */
 .kicker-bajo{ margin:18px 0 0; }
+
+/* ---------- modo celular (pedido del cliente, captura "Cell 1") ----------
+   En pantalla de teléfono el orden cambia: el dato del sencillo sube arriba de
+   todo y el botón queda pegado debajo del nombre. Se hace con `order` y no
+   moviendo el HTML porque en escritorio el orden que vale es el otro. */
+@media (max-width:720px){
+  .hero .kicker-bajo{
+    order:1; margin:0 0 14px;
+    /* En 390 px de ancho el renglón entero no entra con el tamaño de
+       escritorio y se salía de la pantalla. */
+    font-size:10px; letter-spacing:.1em; line-height:1.6;
+  }
+  .hero .title-stage{ order:2; }
+  .hero .hero-actions{ order:3; margin-top:18px; }
+  .title-stage.title-3d{ height:clamp(220px, 34vh, 340px); }
+  /* El título 3D no reacciona al toque: se pasea solo (lo maneja
+     TituloCromado). Sin eventos, además, el dedo siempre hace scroll. */
+  .title-stage.title-3d canvas{ pointer-events:none; }
+}

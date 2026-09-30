@@ -1,6 +1,12 @@
-import { reloj, type EstadoReproductor } from '../ganchos/useReproductor';
+import type { EstadoReproductor } from '../ganchos/useReproductor';
 
-/** La píldora fija de abajo: qué suena, cuánto va y play/pausa. */
+/**
+ * La píldora fija de abajo: qué suena, cuánto va y play/pausa.
+ *
+ * SIN CONTADOR DE MINUTOS: el cliente lo pidió quitar el 2026-09-30 (el
+ * "00:30" delataba que lo que suena es un adelanto de 30 segundos). La barra
+ * sigue mostrando el avance.
+ */
 export function MiniReproductor({
   reproductor,
   visible,
@@ -8,7 +14,7 @@ export function MiniReproductor({
   reproductor: EstadoReproductor;
   visible: boolean;
 }) {
-  const { temaActual, sonando, progreso, tiempo, alternar } = reproductor;
+  const { temaActual, sonando, progreso, alternar } = reproductor;
 
   return (
     <div className={visible ? 'mini-player show' : 'mini-player'}>
@@ -25,7 +31,6 @@ export function MiniReproductor({
           <i style={{ width: `${Math.min(100, progreso * 100)}%` }} />
         </div>
       </div>
-      <div className="mp-time">{reloj(tiempo)}</div>
     </div>
   );
 }

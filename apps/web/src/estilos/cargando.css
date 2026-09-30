@@ -25,23 +25,53 @@
   transform-origin:50% 50%;
 }
 
-/* ---- la fila de puntos que se vuelven líneas ---- */
-.cargando-barra{
-  position:absolute; left:0; right:0; top:-16px;
-  display:flex; align-items:center; justify-content:space-between;
-  height:8px;
+/* ---- los cuatro lados del cuadrado ----
+   Cada lado es un riel punteado con una línea blanca encima que crece según
+   --llenado (0 a 1). Se anima la escala y no el ancho: escalar no obliga al
+   navegador a recalcular la maqueta en cada cuadro.
+   La dirección de crecimiento de cada lado está elegida para que, con el
+   cuadro ya girado, en pantalla SIEMPRE se vea trazar de izquierda a derecha. */
+.cargando-lado{
+  --grosor:2px;
+  --hueco:-24px;
+  position:absolute;
+  background:repeating-linear-gradient(var(--sentido, 90deg),
+    rgba(255,255,255,.28) 0 2px,
+    rgba(255,255,255,0) 2px 11px);
 }
-.cargando-punto{
-  /* El punto ES la línea: crece a lo ancho según --estirado (0 a 1). Animar el
-     ancho de un span y no cambiar de elemento evita que el navegador rearme la
-     fila veintiséis veces por cuadro. */
-  display:block;
-  height:2px;
-  width:calc(2px + var(--estirado, 0) * 9px);
+.cargando-lado > i{
+  position:absolute; inset:0;
   background:var(--bone-100);
-  opacity:calc(.35 + var(--estirado, 0) * .65);
-  transition:width .18s linear, opacity .18s linear;
+  box-shadow:0 0 12px rgba(255,255,255,.45);
+  transform:scale(0);
+  transition:transform .18s linear;
 }
+
+.lado-1{ top:var(--hueco); left:var(--hueco); right:var(--hueco); height:var(--grosor); }
+.lado-3{ bottom:var(--hueco); left:var(--hueco); right:var(--hueco); height:var(--grosor); }
+.lado-2{ left:var(--hueco); top:var(--hueco); bottom:var(--hueco); width:var(--grosor); --sentido:180deg; }
+.lado-4{ right:var(--hueco); top:var(--hueco); bottom:var(--hueco); width:var(--grosor); --sentido:180deg; }
+
+.lado-1 > i{ transform-origin:left center;  transform:scaleX(var(--llenado, 0)); }
+.lado-2 > i{ transform-origin:center bottom; transform:scaleY(var(--llenado, 0)); }
+.lado-3 > i{ transform-origin:right center; transform:scaleX(var(--llenado, 0)); }
+.lado-4 > i{ transform-origin:center top;   transform:scaleY(var(--llenado, 0)); }
+
+/* ---- la funda ----
+   Al cerrarse el cuadrado aparece la portada detrás del vinilo: es lo que hace
+   que al 100% el conjunto se lea como la cubierta del disco y no como un aro
+   suelto (pedido del cliente, 2026-09-30). */
+.cargando-funda{
+  position:absolute; inset:-24px;
+  overflow:hidden;
+  opacity:0;
+  transition:opacity 1s ease .15s;
+}
+.cargando-funda img{
+  width:100%; height:100%; object-fit:cover;
+  filter:grayscale(.45) contrast(1.05) brightness(.62);
+}
+.cargando.listo .cargando-funda{ opacity:.5; }
 
 /* ---- el vinilo ---- */
 .cargando-vinilo{
@@ -139,8 +169,7 @@
   55%{ transform:scale(1.35) rotate(-4deg); opacity:1; }
   100%{ transform:scale(7) rotate(-8deg); opacity:0; filter:blur(14px); }
 }
-.cargando.saliendo .cargando-cifra,
-.cargando.saliendo .cargando-barra{ animation:cargandoApagar .35s ease forwards; }
+.cargando.saliendo .cargando-cifra{ animation:cargandoApagar .35s ease forwards; }
 @keyframes cargandoApagar{ to{ opacity:0; transform:translateY(-8px); } }
 
 /* El barrido blanco: dura poco y es lo que corta entre una pantalla y la otra. */
@@ -162,6 +191,7 @@
 /* Quien pidió menos movimiento se salta el giro, el zoom y el destello. */
 @media (prefers-reduced-motion: reduce){
   .cargando-cuadro{ transition:none; }
+  .cargando-lado > i{ transition:none; }
   .cargando-vinilo{ animation:none; }
   .cargando.saliendo .cargando-cuadro,
   .cargando.saliendo .cargando-destello{ animation:none; }

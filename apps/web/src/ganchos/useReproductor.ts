@@ -1,138 +1,224 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { temas, type Tema } from '../datos/artista';
+import { fondo, temas, type Tema } from '../datos/artista';
 
 /**
- * El reproductor del sitio. Un solo <audio> para toda la página: el mini
- * reproductor de abajo y la lista de temas son dos vistas del MISMO estado.
+ * La música del sitio: las cuatro canciones que eligió el cliente, en bucle y
+ * SIN SILENCIO entre una y otra.
  *
- * Dos elementos de audio separados —uno por sección— fue el primer intento y
- * termina siempre igual: dos canciones sonando a la vez en cuanto alguien toca
- * play en la lista mientras el mini reproductor sigue andando.
+ * DOS ELEMENTOS DE AUDIO, NO UNO. Con un solo <audio> no hay forma de cruzar
+ * dos canciones: para que entre la siguiente hay que cambiarle la fuente a la
+ * que está sonando, y eso la corta en seco. Acá hay dos y se turnan — mientras
+ * una baja, la otra ya viene subiendo, que es exactamente lo que se pidió el
+ * 2026-09-30: la página no queda muda en ningún momento salvo que el visitante
+ * la pause. (Reemplaza la nota de "un solo <audio>" del CLAUDE.md: el riesgo de
+ * dos canciones a la vez se evita porque los dos elementos viven en el mismo
+ * gancho y solo uno es el activo.)
+ *
+ * El cruce dura CRUCE segundos y arranca cuando a la que suena le queda justo
+ * eso. Cada lado usa una curva de raíz cuadrada (igual potencia): con una rampa
+ * lineal, en la mitad del cruce las dos están al 50% y el oído percibe un
+ * bajón de volumen.
+ *
+ * Tocar un tema de la discografía no rompe el bucle: suena ese, y al terminar
+ * el cruce sigue por donde iba la lista de fondo.
  */
+
+const CRUCE = 4;
+
+/** mm:ss para los tiempos de la discografía. */
+export function reloj(segundos: number): string {
+  if (!Number.isFinite(segundos) || segundos < 0) return '0:00';
+  const m = Math.floor(segundos / 60);
+  const s = Math.floor(segundos % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 export interface EstadoReproductor {
   temaActual: Tema;
-  indice: number;
   sonando: boolean;
-  progreso: number;   // 0..1
-  tiempo: number;     // segundos
-  duracion: number;   // segundos
+  progreso: number;
+  tiempo: number;
+  duracion: number;
   alternar: () => void;
-  elegir: (indice: number) => void;
-  siguiente: () => void;
-  /** Arranca el tema subiendo el volumen de a poco (entrada del sitio). */
+  /** Toca cualquier tema (discografía o lista de fondo) sin cortar el bucle. */
+  elegirTema: (tema: Tema) => void;
+  /** Arranca la música subiendo el volumen de a poco (entrada del sitio). */
   entrarSuave: (segundos?: number) => void;
+  /** La lista que suena de fondo, para mostrarla en pantalla. */
+  lista: Tema[];
 }
 
 export function useReproductor(): EstadoReproductor {
-  const audio = useRef<HTMLAudioElement | null>(null);
-  const [indice, setIndice] = useState(0);
+  const audios = useRef<HTMLAudioElement[]>([]);
+  const activo = useRef(0);
+  const cruzando = useRef(false);
+  const volumen = useRef(1);
+  /** Próxima posición de la lista de fondo. */
+  const bucle = useRef(1);
+
+  const [temaActual, setTemaActual] = useState<Tema>(fondo[0] ?? temas[0]);
   const [sonando, setSonando] = useState(false);
+  const [progreso, setProgreso] = useState(0);
   const [tiempo, setTiempo] = useState(0);
   const [duracion, setDuracion] = useState(0);
 
-  if (audio.current === null && typeof Audio !== 'undefined') {
-    audio.current = new Audio();
-    audio.current.preload = 'none';
+  if (audios.current.length === 0 && typeof Audio !== 'undefined') {
+    audios.current = [new Audio(), new Audio()];
+    for (const a of audios.current) {
+      a.preload = 'auto';
+      a.volume = 0;
+    }
   }
 
-  const temaActual = temas[indice];
+  /** Deja un elemento listo con un tema, en silencio. */
+  const cargar = useCallback((cual: number, tema: Tema) => {
+    const a = audios.current[cual];
+    if (!a) return;
+    a.src = tema.adelanto;
+    a.currentTime = 0;
+    a.volume = 0;
+  }, []);
 
+  /** Devuelve el siguiente de la lista de fondo y avanza el bucle. */
+  const proximoDelBucle = useCallback((): Tema => {
+    const tema = fondo[bucle.current % fondo.length];
+    bucle.current = (bucle.current + 1) % fondo.length;
+    return tema;
+  }, []);
+
+  // Primera carga.
   useEffect(() => {
-    const el = audio.current;
-    if (!el) return;
+    cargar(0, fondo[0]);
+  }, [cargar]);
 
-    el.src = temaActual.adelanto;
-    setTiempo(0);
-    setDuracion(0);
+  // El motor del cruce: vigila cuánto le falta a la que suena.
+  useEffect(() => {
+    if (!sonando) return;
 
-    const alActualizar = () => setTiempo(el.currentTime);
-    const alCargar = () => setDuracion(el.duration || 0);
-    const alTerminar = () => setSonando(false);
+    let cuadro = 0;
+    let entrante: Tema | null = null;
 
-    el.addEventListener('timeupdate', alActualizar);
-    el.addEventListener('loadedmetadata', alCargar);
-    el.addEventListener('ended', alTerminar);
-    return () => {
-      el.removeEventListener('timeupdate', alActualizar);
-      el.removeEventListener('loadedmetadata', alCargar);
-      el.removeEventListener('ended', alTerminar);
+    const paso = () => {
+      const a = audios.current[activo.current];
+      const b = audios.current[1 - activo.current];
+
+      if (a && Number.isFinite(a.duration) && a.duration > 0) {
+        setTiempo(a.currentTime);
+        setDuracion(a.duration);
+        setProgreso(a.currentTime / a.duration);
+
+        const falta = a.duration - a.currentTime;
+
+        if (!cruzando.current && falta <= CRUCE) {
+          // Empieza el relevo: la siguiente arranca ya, bajita.
+          cruzando.current = true;
+          entrante = proximoDelBucle();
+          cargar(1 - activo.current, entrante);
+          void b?.play().catch(() => undefined);
+        }
+
+        if (cruzando.current && b) {
+          const t = Math.min(1, Math.max(0, (CRUCE - falta) / CRUCE));
+          a.volume = Math.sqrt(1 - t) * volumen.current;
+          b.volume = Math.sqrt(t) * volumen.current;
+
+          if (t >= 1 || a.ended) {
+            a.pause();
+            activo.current = 1 - activo.current;
+            cruzando.current = false;
+            b.volume = volumen.current;
+            if (entrante) setTemaActual(entrante);
+            entrante = null;
+          }
+        }
+      }
+
+      cuadro = requestAnimationFrame(paso);
     };
-  }, [temaActual.adelanto]);
 
+    cuadro = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(cuadro);
+  }, [sonando, cargar, proximoDelBucle]);
+
+  // Play / pausa sobre el activo (y sobre el que entra, si hay cruce en curso).
   useEffect(() => {
-    const el = audio.current;
-    if (!el) return;
+    const a = audios.current[activo.current];
+    const b = audios.current[1 - activo.current];
+    if (!a) return;
 
     if (sonando) {
-      // El navegador puede negar el play si no hubo gesto del usuario. No es
-      // un error del sitio: se vuelve al estado pausado y ya.
-      void el.play().catch(() => setSonando(false));
+      void a.play().catch(() => setSonando(false));
+      if (cruzando.current) void b?.play().catch(() => undefined);
     } else {
-      el.pause();
+      a.pause();
+      b?.pause();
     }
-  }, [sonando, indice]);
+  }, [sonando]);
 
   const alternar = useCallback(() => setSonando((s) => !s), []);
 
-  /**
-   * Entrada gradual: la música no arranca de golpe a todo volumen cuando el
-   * visitante entra, sube en los primeros segundos mientras aparece la
-   * portada. Un golpe de audio al pasar la puerta hace que la gente cierre la
-   * pestaña antes de ver nada.
-   */
   const entrarSuave = useCallback((segundos = 3) => {
-    const el = audio.current;
-    if (!el) return;
+    const a = audios.current[activo.current];
+    if (!a) return;
 
-    el.volume = 0;
+    a.volume = 0;
+    volumen.current = 1;
     setSonando(true);
 
+    // Sube de a poco mientras aparece la portada: un golpe de audio al pasar
+    // la puerta hace que la gente cierre la pestaña.
     const inicio = performance.now();
     const subir = () => {
       const t = Math.min(1, (performance.now() - inicio) / (segundos * 1000));
-      el.volume = t * t;   // curva suave: al oído, lineal sube demasiado rápido
+      if (!cruzando.current) a.volume = t * t;
       if (t < 1) requestAnimationFrame(subir);
     };
     requestAnimationFrame(subir);
   }, []);
 
-  const elegir = useCallback((nuevo: number) => {
-    setIndice((actual) => {
-      if (actual === nuevo) {
+  const elegirTema = useCallback(
+    (tema: Tema) => {
+      if (tema.id === temaActual.id) {
         setSonando((s) => !s);
-        return actual;
+        return;
       }
-      setSonando(true);
-      return nuevo;
-    });
-  }, []);
 
-  const siguiente = useCallback(() => {
-    setIndice((actual) => (actual + 1) % temas.length);
-    setSonando(true);
-  }, []);
+      // Corte a mano: se descarta el cruce en curso y el tema entra entero.
+      audios.current[1 - activo.current]?.pause();
+      cruzando.current = false;
+
+      const enElFondo = fondo.findIndex((t) => t.id === tema.id);
+      if (enElFondo >= 0) bucle.current = (enElFondo + 1) % fondo.length;
+
+      cargar(activo.current, tema);
+      const a = audios.current[activo.current];
+      if (a) {
+        a.volume = volumen.current;
+        // Hay que pedir play() a mano: cambiarle el src a un elemento que está
+        // sonando lo deja pausado, y si ya estábamos en marcha el efecto de
+        // play/pausa no se vuelve a ejecutar (sonando no cambió).
+        void a.play().catch(() => setSonando(false));
+      }
+      setTemaActual(tema);
+      setProgreso(0);
+      setTiempo(0);
+      setSonando(true);
+    },
+    [temaActual.id, cargar],
+  );
 
   return useMemo(
     () => ({
       temaActual,
-      indice,
       sonando,
-      progreso: duracion > 0 ? tiempo / duracion : 0,
+      progreso,
       tiempo,
       duracion,
       alternar,
-      elegir,
-      siguiente,
+      elegirTema,
       entrarSuave,
+      lista: fondo,
     }),
-    [temaActual, indice, sonando, tiempo, duracion, alternar, elegir, siguiente, entrarSuave],
+    [temaActual, sonando, progreso, tiempo, duracion, alternar, elegirTema, entrarSuave],
   );
-}
-
-/** 92 → "01:32". El reproductor muestra minutos, no segundos sueltos. */
-export function reloj(segundos: number): string {
-  if (!Number.isFinite(segundos) || segundos < 0) return '00:00';
-  const m = Math.floor(segundos / 60);
-  const s = Math.floor(segundos % 60);
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }

@@ -22,13 +22,13 @@ npm run dev:api    # API  -> http://localhost:3000
 apps/web            Vite + React + TypeScript (three.js listo para la portada)
   src/secciones     Hero, Música, Videos, Sobre, Pie
   src/componentes   Intro, Nav, MiniReproductor
-  src/ganchos       useReproductor (un solo <audio> para todo el sitio)
+  src/ganchos       useReproductor (dos <audio> que se cruzan sin silencio)
   src/datos         catálogo del artista (generado, ver CLAUDE.md §4)
   src/estilos       tokens.css (generado) + global.css
 apps/api            NestJS — suscripciones y contacto
 design-system       tokens.json, componentes y texturas: la fuente de verdad
 reference           el prototipo HTML original, como referencia de comportamiento
-scripts             generar-tokens.py
+scripts             generar-tokens.py, generar-fondo.py
 ```
 
 ## Antes de publicar
@@ -37,8 +37,8 @@ scripts             generar-tokens.py
 - [ ] Biografía real (la actual es borrador y se ve marcada)
 - [ ] Enlace de Spotify
 - [ ] Definir hospedaje de los videos oficiales
-- [ ] Confirmar con el cliente la tipografía del título (hoy **Eater**, libre;
-      se comparan con `?fuente=nosifer`, `metalmania`, `pirata`)
+- [ ] Confirmar con el cliente la tipografía del título (hoy **Unifraktur
+      Cook**, libre; se comparan con `?fuente=nosifer`, `metalmania`, `pirata`)
 - [ ] Portadas: varias son fotos claras — revisar con el cliente cuáles van al sitio
 
 Detalle de decisiones y convenciones: [`CLAUDE.md`](CLAUDE.md).

@@ -3,8 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 /**
  * Los clips del video oficial, en bucle, detrás de la portada.
  *
- * Son recortes de 8 segundos de "24/7" y "Tengo que ganar" (el canal del
- * propio artista), sin audio y a 24 fps: 1,8 MB los dos. El cliente los pidió
+ * Son recortes de 8 segundos de "24/7", "Tengo que ganar" y "Young Gs" (el
+ * canal del propio artista), sin audio y a 24 fps: 3,8 MB los tres. El del
+ * medio de "Young Gs" arranca en 0:43, que es el trozo que eligió el cliente
+ * el 2026-09-30. Los pidió
  * "como gif" — se hicieron en MP4 porque un gif del mismo trozo pesa veinte
  * veces más y se ve peor; para el visitante es idéntico, un video mudo que se
  * repite solo.
@@ -13,7 +15,11 @@ import { useEffect, useRef, useState } from 'react';
  * loop corto.
  */
 
-const CLIPS = ['/clips/247.mp4', '/clips/tengo-que-ganar.mp4'] as const;
+const CLIPS = [
+  '/clips/247.mp4',
+  '/clips/tengo-que-ganar.mp4',
+  '/clips/young-gs.mp4',
+] as const;
 
 export function FondoVideo({ activo }: { activo: boolean }) {
   const [indice, setIndice] = useState(0);

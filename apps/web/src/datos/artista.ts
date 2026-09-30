@@ -183,3 +183,53 @@ export const temas: Tema[] = [
     apple: 'https://music.apple.com/us/album/dolor/1870919377?i=1870919378&uo=4'
   }
 ];
+
+/**
+ * Las cuatro que suenan de fondo, en el orden que pidió el cliente
+ * (2026-09-30): al terminar la cuarta vuelve a la primera.
+ *
+ * Son los mismos adelantos de 30 s del catálogo: sirven para armar el paso de
+ * una canción a la otra, no para publicar.
+ */
+export const fondo: Tema[] = [
+  {
+    id: 6778083035,
+    titulo: 'CONMIGO ES MEJOR',
+    lanzamiento: '2026-06-17',
+    genero: 'MZGenre.Music.Latin.LatinUrban',
+    duracionMs: 145532,
+    arte: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/e8/51/08/e851082a-7148-b1de-c488-ad7a0a47708f/4611.jpg/1000x1000bb.jpg',
+    adelanto: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/06/5b/29/065b2901-8320-8dee-0a80-02cfd1ab343f/mzaf_17913889222047174957.plus.aac.p.m4a',
+    apple: 'https://music.apple.com/us/album/conmigo-es-mejor/6778083030?i=6778083035&uo=4'
+  },
+  {
+    id: 1830739568,
+    titulo: '24/7',
+    lanzamiento: '2021-08-20',
+    genero: 'MZGenre.Music.HipHopRap',
+    duracionMs: 185156,
+    arte: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/97/6a/5b/976a5b18-4b09-29c1-0f78-76d3f529aaf9/artwork.jpg/1000x1000bb.jpg',
+    adelanto: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/60/0d/e6/600de6a3-7d55-8885-bab0-19f84ad9d677/mzaf_14348493342614313581.plus.aac.p.m4a',
+    apple: 'https://music.apple.com/us/album/24-7/1830739567?i=1830739568&uo=4'
+  },
+  {
+    id: 1830719570,
+    titulo: 'Young G',
+    lanzamiento: '2024-08-30',
+    genero: 'MZGenre.Music.HipHopRap',
+    duracionMs: 132497,
+    arte: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/09/3e/8e/093e8e18-a44f-c2eb-f25f-c27fb3c54513/artwork.jpg/1000x1000bb.jpg',
+    adelanto: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/62/b2/76/62b276c5-0770-997e-f79b-5cc44c9ad241/mzaf_5254030235281714980.plus.aac.p.m4a',
+    apple: 'https://music.apple.com/us/album/young-g/1830719569?i=1830719570&uo=4'
+  },
+  {
+    id: 1886093402,
+    titulo: 'BEBA',
+    lanzamiento: '2026-03-24',
+    genero: 'Soul',
+    duracionMs: 148274,
+    arte: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/61/3d/48/613d4887-c58d-00cb-50bf-51de3ae4dd9d/4233.jpg/1000x1000bb.jpg',
+    adelanto: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/de/6b/41/de6b4170-e664-ccef-b5ad-cc556e3f9f5b/mzaf_8611299900803707502.plus.aac.p.m4a',
+    apple: 'https://music.apple.com/us/album/beba/1886093400?i=1886093402&uo=4'
+  }
+];

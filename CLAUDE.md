@@ -84,8 +84,9 @@ con degradado:
 ## 2.1.1. La tipografía del título
 
 El cliente quiere letra **death metal**. Darkhusk era la elegida, pero su
-licencia prohíbe el uso comercial, así que el título usa **Eater** —la más
-parecida de las libres— y quedan otras tres cargadas para comparar en vivo:
+licencia prohíbe el uso comercial. El cliente descartó Eater ("no me gusta esa
+fuente"), así que el título usa **Unifraktur Cook** y quedan las otras cargadas
+para comparar en vivo:
 
 | `?fuente=` | Tipografía | Licencia | Pinta |
 |---|---|---|---|
@@ -108,9 +109,18 @@ fondo, la tipografía 3D, las portadas y el primer adelanto de audio). Tiene un
 piso de ~2,6 s porque con todo en caché la barra llega a 100% en un parpadeo y
 la animación no se ve.
 
-- Los puntos de arriba del cuadro se estiran hasta volverse líneas; al
-  completarse la fila, el cuadro gira 90° y la fila vuelve a empezar sobre el
-  lado que quedó arriba. Cuatro vueltas = 360°.
+- **Dibuja un cuadrado alrededor del vinilo** (rehecho el 2026-09-30): cada
+  lado es un 25%. Se traza una línea blanca de izquierda a derecha, al llegar
+  al 25% el cuadro gira 90° para que el lado siguiente quede arriba y **la
+  línea ya trazada se queda puesta** y gira con él. Al 100% el cuadrado está
+  cerrado, aparece la portada detrás del disco y el conjunto se lee como la
+  cubierta.
+- Por eso los lados se dibujan en el orden `top → left → bottom → right`: con
+  el giro en sentido del reloj, el que queda arriba en cada vuelta es el
+  anterior en sentido contrario. Cada uno crece hacia donde, ya girado, se ve
+  como "de izquierda a derecha" en pantalla.
+- En el centro del vinilo va el **logo de Money One 1**
+  (`public/marca/money-one-1.jpg`), no la portada del disco.
 - Junto al puntero se lee `loading...` y al terminar `click para continuar`.
   Ese click es además el gesto que el navegador exige para dejar sonar audio:
   por eso la música entra ahí, **subiendo de a poco** (`entrarSuave`).
@@ -118,8 +128,11 @@ la animación no se ve.
 
 ## 2.3. El fondo de la portada
 
-Dos recortes de 8 s de los videos oficiales (*24/7* y *Tengo que ganar*), sin
-audio, 1,8 MB los dos, en bucle alternado. El cliente los pidió "como gif": se
+Tres recortes de 8 s de los videos oficiales (*24/7*, *Tengo que ganar* y
+*Young Gs* —este desde 0:43, que es el trozo que eligió el cliente—), sin
+audio, 3,8 MB los tres, en bucle alternado. El 2026-09-30 se subió el brillo
+(`brightness(.5)` y la capa oscura al 56%): en la primera versión el cliente
+directamente no distinguía los clips. El cliente los pidió "como gif": se
 hicieron en MP4 porque un gif del mismo trozo pesa veinte veces más y se ve
 peor. Se recortan con ffmpeg:
 
@@ -131,6 +144,33 @@ ffmpeg -ss 15 -i "24 7 (Video Oficial).mp4" -t 8 -an ^
 
 Van al repositorio a propósito (hay una excepción en `.gitignore`): el sitio no
 arranca sin ellos y pesan menos que una foto.
+
+
+## 2.4. La música de fondo (2026-09-30)
+
+Cuatro canciones en bucle, en el orden que fijó el cliente: **Conmigo es mejor
+→ 24/7 → Young G → BEBA** (`datos/artista.ts`, bloque `fondo`, generado por
+`scripts/generar-fondo.py`).
+
+- El paso de una a otra es un **cruce de 4 segundos**: la siguiente arranca
+  mientras la anterior baja, con curva de raíz cuadrada (igual potencia). Con
+  una rampa lineal las dos quedan al 50% en el medio y se oye un bajón.
+- La página nunca queda en silencio salvo que el visitante pause.
+- El mini reproductor **no muestra el contador de minutos**: delataba que lo
+  que suena son adelantos de 30 s.
+- Tocar un tema de la discografía no rompe el bucle: suena ese y al terminar la
+  lista sigue por donde iba.
+
+## 2.5. Modo celular de la portada (2026-09-30, captura "Cell 1")
+
+Por debajo de 720 px cambia el orden con `order`, no el HTML: el dato del
+sencillo sube arriba del nombre y el botón "Ver Spotify" queda pegado debajo.
+El título 3D **no reacciona al toque** —se pasea solo en círculos suaves— y el
+canvas va con `pointer-events:none`, así el dedo siempre hace scroll.
+
+⚠ El canvas del título se ancla con `width:calc(100% + var(--sangria)*2)` y
+margen negativo. Con `100vw` el documento quedaba 48 px más ancho que la
+ventana y en celular se veía todo corrido hacia la derecha.
 
 ---
 
@@ -185,9 +225,12 @@ de Spotify** — el cliente lo tiene que pasar.
 - Los comentarios explican **por qué**, no qué. Si una decisión fue por un
   defecto real (audio bloqueado por el navegador, scroll que marea), eso va
   escrito.
-- Un solo `<audio>` para todo el sitio (`ganchos/useReproductor.ts`). La lista y
-  el mini reproductor son dos vistas del mismo estado: dos elementos de audio
-  terminan con dos canciones sonando a la vez.
+- **Dos** `<audio>` y un solo gancho (`ganchos/useReproductor.ts`). Eran uno
+  hasta el 2026-09-30, cuando el cliente pidió que las canciones se crucen sin
+  silencio: con un solo elemento hay que cambiarle el `src` y eso corta la que
+  suena. Los dos viven dentro del gancho y solo uno es el activo, así que el
+  riesgo de "dos canciones a la vez" sigue cubierto; la lista y el mini
+  reproductor son dos vistas del mismo estado.
 - Respetar `prefers-reduced-motion`: sin scroll suave y sin tilt.
 
 ---

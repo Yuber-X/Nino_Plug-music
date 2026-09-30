@@ -1,26 +1,31 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { temas } from '../datos/artista';
+import { fondo, temas } from '../datos/artista';
 import { clipsAPrecargar } from '../secciones/FondoVideo';
 import { usePrecarga } from '../ganchos/usePrecarga';
 import { EtiquetaCursor } from './EtiquetaCursor';
 
 /**
- * La pantalla de carga (rehecha el 2026-09-29 sobre las capturas del cliente).
+ * La pantalla de carga (rehecha el 2026-09-30 sobre las capturas del cliente).
  *
- * CÓMO FUNCIONA: arriba del cuadro hay una fila de puntos. Al avanzar la carga
- * los puntos se van estirando hasta volverse líneas, de izquierda a derecha.
- * Cuando la fila se completa, el cuadro gira 90° y la fila vuelve a empezar
- * sobre el lado que quedó arriba. Cuatro vueltas = 360° = carga terminada.
+ * CÓMO FUNCIONA: la carga DIBUJA UN CUADRADO alrededor del vinilo. Cada lado
+ * es un 25%: se traza una línea blanca de izquierda a derecha, y al llegar al
+ * 25% el cuadro gira 90° para que el lado siguiente quede arriba — pero la
+ * línea ya trazada NO se borra, queda puesta y gira con el cuadro. Al 100% los
+ * cuatro lados están hechos y el conjunto se lee como la cubierta del disco.
+ *
+ * Por eso los lados se dibujan en el orden top → left → bottom → right: con el
+ * giro en sentido del reloj, el lado que queda arriba en cada vuelta es el
+ * anterior en sentido contrario. Y cada uno crece hacia el lado que, ya girado,
+ * se ve como "de izquierda a derecha" en pantalla.
  *
  * Mientras tanto, junto al puntero se lee "loading..."; al terminar cambia a
  * "click para continuar". Ese click es además el gesto que el navegador exige
  * para dejar sonar el audio: por eso la música entra recién ahí, y entra
- * subiendo de a poco mientras la portada aparece.
+ * subiendo de a poco.
  */
 
-const PUNTOS = 26;
-const VUELTAS = 4;
+const LADOS = 4;
 
 export function Cargando({ alEntrar }: { alEntrar: () => void }) {
   const [saliendo, setSaliendo] = useState(false);
@@ -34,11 +39,12 @@ export function Cargando({ alEntrar }: { alEntrar: () => void }) {
   const recursos = useMemo(
     () => [
       ...clipsAPrecargar(),
-      '/fuentes/Darkhusk.otf',
+      '/fuentes/UnifrakturCook-Bold.ttf',
+      '/marca/money-one-1.jpg',
       ...temas.slice(0, 6).map((t) => t.arte),
-      ultimo.adelanto,
+      fondo[0].adelanto,
     ],
-    [ultimo.adelanto],
+    [],
   );
 
   const real = usePrecarga(recursos);
@@ -60,12 +66,12 @@ export function Cargando({ alEntrar }: { alEntrar: () => void }) {
   const avance = hayForzado ? Math.min(1, Math.max(0, forzado)) : real.avance;
   const listo = hayForzado ? avance >= 1 : real.listo;
 
-  // El avance total se reparte en cuatro vueltas alrededor del cuadro.
-  const vuelta = Math.min(VUELTAS - 1, Math.floor(avance * VUELTAS));
-  const dentroDeVuelta = Math.min(1, avance * VUELTAS - vuelta);
-  // Al terminar completa la vuelta entera: el cuadro queda derecho para el
+  // Qué lado se está trazando y cuánto le falta.
+  const lado = Math.min(LADOS - 1, Math.floor(avance * LADOS));
+  const dentroDeLado = Math.min(1, avance * LADOS - lado);
+  // Al terminar completa el giro entero: el cuadro queda derecho para el
   // click, no torcido a 270°.
-  const grados = listo ? VUELTAS * 90 : vuelta * 90;
+  const grados = listo ? LADOS * 90 : lado * 90;
 
   useEffect(() => {
     if (!listo) return;
@@ -96,35 +102,36 @@ export function Cargando({ alEntrar }: { alEntrar: () => void }) {
     >
       <div className="cargando-centro">
         <div className="cargando-cuadro" style={{ transform: `rotate(${grados}deg)` }}>
-          {/* La fila de puntos que se vuelven líneas. Va sobre el borde de
-              arriba del cuadro y gira con él. */}
-          <div className="cargando-barra">
-            {Array.from({ length: PUNTOS }, (_, i) => {
-              const umbral = i / PUNTOS;
-              const largo = Math.max(0, Math.min(1, (dentroDeVuelta - umbral) * PUNTOS));
-              return (
-                <span
-                  key={i}
-                  className="cargando-punto"
-                  style={{ '--estirado': largo } as React.CSSProperties}
-                />
-              );
-            })}
+          {/* La funda: al completarse el cuadrado aparece la portada detrás del
+              vinilo y el conjunto se ve como el disco en su cubierta. */}
+          <div className="cargando-funda">
+            <img src={ultimo.arte} alt="" />
           </div>
+
+          {/* Los cuatro lados del cuadrado. El que está en curso crece; los ya
+              hechos se quedan enteros (pedido del cliente: "que mantenga su
+              línea blanca siempre"). */}
+          {[0, 1, 2, 3].map((i) => {
+            const llenado = listo ? 1 : i < lado ? 1 : i === lado ? dentroDeLado : 0;
+            return (
+              <div key={i} className={`cargando-lado lado-${i + 1}`}>
+                <i style={{ '--llenado': llenado } as React.CSSProperties} />
+              </div>
+            );
+          })}
 
           {/* Un disco, no la portada cuadrada: al girar 90° una foto se ve
               "torcida" y el ojo pide volver a enderezarla, mientras que un
               vinilo girando es lo que uno espera (pedido del cliente,
-              2026-09-30). La portada queda como etiqueta del centro. */}
+              2026-09-30). En el centro va el logo del sello. */}
           <div className="cargando-vinilo">
             <div className="cargando-surcos" />
             <div className="cargando-reflejo" />
             <div className="cargando-etiqueta">
-              <img src={ultimo.arte} alt="" />
+              <img src="/marca/money-one-1.jpg" alt="" />
               <div className="cargando-agujero" />
             </div>
           </div>
-
         </div>
 
         {/* El nombre del disco va FUERA del cuadro que gira: adentro se daba

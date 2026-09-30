@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
 import Lenis from 'lenis';
+// La hoja de Lenis hace falta: sin ella el navegador sigue con su scroll-behavior
+// y el desplazamiento suave no se nota (el cliente lo pidió otra vez el
+// 2026-09-30, y era esto lo que faltaba).
+import 'lenis/dist/lenis.css';
 
 import { Cargando } from './componentes/Cargando';
 import { Nav } from './componentes/Nav';
@@ -30,7 +34,9 @@ export default function App() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const lenis = new Lenis({ duration: 1.1, smoothWheel: true });
+    // anchors: true hace que los enlaces del menú (#musica, #videos…) también
+    // bajen suave en vez de saltar de golpe.
+    const lenis = new Lenis({ duration: 1.2, smoothWheel: true, anchors: true });
     let frame = 0;
     const animar = (t: number) => {
       lenis.raf(t);

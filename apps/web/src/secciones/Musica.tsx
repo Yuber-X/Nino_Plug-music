@@ -8,7 +8,7 @@ import { reloj, type EstadoReproductor } from '../ganchos/useReproductor';
  * tocar un tema acá es lo mismo que tocarlo abajo.
  */
 export function Musica({ reproductor }: { reproductor: EstadoReproductor }) {
-  const { indice, sonando, tiempo, duracion, elegir } = reproductor;
+  const { temaActual, sonando, tiempo, duracion, elegirTema } = reproductor;
 
   return (
     <section className="player-section" id="musica">
@@ -22,12 +22,12 @@ export function Musica({ reproductor }: { reproductor: EstadoReproductor }) {
 
         <div className="tracklist reveal">
           {temas.map((tema, i) => {
-            const activo = i === indice;
+            const activo = tema.id === temaActual.id;
             return (
               <button
                 key={tema.id}
                 className={activo ? 'track active' : 'track'}
-                onClick={() => elegir(i)}
+                onClick={() => elegirTema(tema)}
                 aria-pressed={activo && sonando}
               >
                 <span className="t-idx">{String(i + 1).padStart(2, '0')}</span>

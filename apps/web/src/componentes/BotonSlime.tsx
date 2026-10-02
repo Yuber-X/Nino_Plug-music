@@ -64,6 +64,13 @@ interface Gota {
   tono: number;
 }
 
+/** Pantalla sin mouse (teléfono, tableta): ahí el slime queda siempre prendido. */
+const CONSULTA_TACTIL = '(hover: none), (pointer: coarse)';
+
+function esTactil(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia(CONSULTA_TACTIL).matches;
+}
+
 /** Mezcla los cuatro neones según el reloj: el color nunca se queda quieto. */
 function colorNeon(t: number, alfa: number): string {
   const paso = (t % 1) * NEONES.length;
@@ -85,7 +92,12 @@ export function BotonSlime({ href, children }: { href: string; children: string 
     typeof window === 'undefined'
       ? null
       : new URLSearchParams(window.location.search).get('slime');
-  const encima = useRef(bandera !== null);
+
+  // EN CELULAR EL SLIME NO SE APAGA NUNCA (pedido del cliente, 2026-10-02).
+  // En una pantalla táctil no hay "mouse encima": sin esto, el efecto no se
+  // vería jamás en el teléfono, que es donde el sitio se va a mirar más.
+  const tactil = useRef(esTactil());
+  const encima = useRef(bandera !== null || tactil.current);
   const [girando, setGirando] = useState(false);
   const abierto = useRef(false);
   const red = useRef<number | undefined>(undefined);
@@ -144,6 +156,17 @@ export function BotonSlime({ href, children }: { href: string; children: string 
   }, [abrir]);
 
   useEffect(() => () => window.clearTimeout(red.current), []);
+
+  // El cliente prueba el modo celular estirando la ventana, sin recargar.
+  useEffect(() => {
+    const mq = window.matchMedia(CONSULTA_TACTIL);
+    const alCambiar = () => {
+      tactil.current = mq.matches;
+      if (mq.matches) encima.current = true;
+    };
+    mq.addEventListener('change', alCambiar);
+    return () => mq.removeEventListener('change', alCambiar);
+  }, []);
 
   // ?slime=giro lanza el giro solo al cargar, para poder mirarlo en una
   // captura sin tener que hacer clic. No abre Spotify: es para trabajar.
@@ -307,7 +330,11 @@ export function BotonSlime({ href, children }: { href: string; children: string 
       target="_blank"
       rel="noreferrer"
       onPointerEnter={() => (encima.current = true)}
-      onPointerLeave={() => (encima.current = false)}
+      onPointerLeave={() => {
+        // En táctil, un toque dispara enter y enseguida leave: apagarlo ahí
+        // dejaría el botón pelado justo después de tocarlo.
+        if (!tactil.current && bandera === null) encima.current = false;
+      }}
       onClick={alHacerClic}
     >
       {/* El filtro que funde las gotas. Va una sola vez, escondido: un SVG de

@@ -226,8 +226,14 @@ Detalles que no se ven pero importan:
   medio, se copia la dirección y lo lee un lector de pantalla. La vuelta es
   decoración y nunca retrasa el clic.
 - Con `prefers-reduced-motion` no hay gotas ni vuelta.
-- **En celular no hay hover**, así que el slime no aparece; el toque sí da
-  vuelta el botón.
+- **En celular el slime no se apaga nunca** (pedido del cliente, 2026-10-02).
+  En una pantalla táctil no hay "mouse encima": sin esto, el efecto no se vería
+  jamás en el teléfono, que es donde el sitio se va a mirar más. Se detecta con
+  `(hover: none), (pointer: coarse)` —la misma consulta que usa el título 3D
+  para pasearse solo— y se escucha su cambio, porque el modo celular se prueba
+  estirando la ventana. El `pointerleave` no apaga nada en táctil: un toque
+  dispara enter y enseguida leave, y el botón quedaría pelado justo después de
+  tocarlo.
 
 ## 2.7. La zona de interacción del título (2026-10-02)
 

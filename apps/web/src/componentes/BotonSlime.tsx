@@ -11,11 +11,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  *     todo, como en la referencia que mandó el cliente (`slime.jpg`). El color
  *     va rotando entre cuatro neones: verde, rojo, azul y amarillo.
  *
- *  2. AL HACER CLIC — el botón se da vuelta como un cartel al que le
- *     dispararon: gira sobre su eje HORIZONTAL (desde arriba, no de costado),
- *     enseña el reverso —blanco, con el nombre del sello— durante segundo y
- *     medio, vuelve, y RECIÉN AHÍ se abre Spotify (2026-10-02: con la pestaña
- *     abriéndose al instante, la vuelta no se llegaba a ver).
+ *  2. AL HACER CLIC — el botón sale girando sobre su eje HORIZONTAL (desde
+ *     arriba, no de costado) como un cartel al que le dispararon: da TRES
+ *     vueltas enteras, enseñando una y otra vez el reverso —blanco, con el
+ *     nombre del sello— y el frente, y en cada vuelta pierde fuerza hasta
+ *     quedar quieto justo donde empezó. Recién ahí se abre Spotify: con la
+ *     pestaña abriéndose al instante, el giro no se llegaba a ver.
  *
  * CÓMO SE FUNDEN LAS GOTAS. El canvas dibuja círculos sueltos; el efecto de
  * fusión lo pone un filtro SVG ("goo"): desenfoca y después endurece el alfa
@@ -43,21 +44,15 @@ const NEONES = [
 /** Segundos que dura una vuelta completa por los cuatro colores. */
 const CICLO_COLOR = 7;
 
-/** Cuánto se queda el reverso a la vista, en milisegundos (pedido: 1,5 s). */
-const REVERSO_MS = 1500;
-
-/** Lo que tarda cada media vuelta del cartel. Igual que la transición del CSS. */
-const GIRO_MS = 550;
-
 /**
- * Cuándo se abre Spotify: cuando el cartel ya volvió a su lado normal.
+ * Lo que dura el giro con impulso. TIENE que coincidir con la animación
+ * `botonGiroImpulso` del CSS: cuando termina, se abre Spotify.
  *
- * Son 2,6 s desde el clic, dentro de los ~5 s que los navegadores consideran
- * "activación reciente del usuario", así que `window.open` NO se bloquea como
- * si fuera una ventana emergente. Pasado ese rato sí se bloquearía, y por eso
- * hay un plan B que navega en la misma pestaña.
+ * Son 2,4 s desde el clic, cómodos dentro de los ~5 s que los navegadores
+ * consideran "activación reciente del usuario". Pasado ese rato, `window.open`
+ * se bloquearía como si fuera una ventana emergente.
  */
-const ABRIR_MS = GIRO_MS + REVERSO_MS + GIRO_MS;
+const GIRO_MS = 2600;
 
 interface Gota {
   x: number;
@@ -86,42 +81,78 @@ export function BotonSlime({ href, children }: { href: string; children: string 
   // mirarlo en una captura —el hover no se puede fotografiar—, igual que
   // ?entrar salta la puerta y ?carga congela la barra. En producción nadie
   // llega con ese parámetro.
-  const encima = useRef(
-    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('slime'),
-  );
-  const [volteado, setVolteado] = useState(false);
-  const temporizadores = useRef<number[]>([]);
+  const bandera =
+    typeof window === 'undefined'
+      ? null
+      : new URLSearchParams(window.location.search).get('slime');
+  const encima = useRef(bandera !== null);
+  const [girando, setGirando] = useState(false);
+  const abierto = useRef(false);
+  const red = useRef<number | undefined>(undefined);
+
+  /**
+   * Abre Spotify en otra pestaña, UNA sola vez.
+   *
+   * OJO CON `noopener` EN LA CADENA DE OPCIONES: con él, `window.open` devuelve
+   * `null` SIEMPRE, aunque la pestaña se haya abierto perfecto — lo dice la
+   * especificación. Acá eso causó el defecto que reportó el cliente el
+   * 2026-10-02: la comprobación "si devolvió null es que lo bloquearon"
+   * resultaba cierta siempre, así que además de abrir la pestaña nueva
+   * mandaba la actual a Spotify.
+   *
+   * La protección de `noopener` no se pierde: se consigue anulando `opener` en
+   * la ventana que se abrió, y de paso el valor devuelto vuelve a servir para
+   * saber si de verdad la bloquearon.
+   */
+  const abrir = useCallback(() => {
+    if (abierto.current) return;
+    abierto.current = true;
+    window.clearTimeout(red.current);
+
+    const otra = window.open(href, '_blank');
+    if (otra) otra.opener = null;
+    // Solo si de verdad no se abrió nada: lo que no puede pasar es que el
+    // clic no haga nada.
+    else window.location.href = href;
+  }, [href]);
 
   const alHacerClic = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       // Con Ctrl/Cmd/medio el visitante pidió otra cosa (abrir aparte, guardar):
       // ahí no se interrumpe nada, se deja al navegador hacer lo suyo.
       if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+      // Sin animación no hay nada que esperar: que el enlace haga lo de siempre.
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       e.preventDefault();
-      for (const id of temporizadores.current) window.clearTimeout(id);
-      temporizadores.current = [];
+      if (girando) return;
 
-      setVolteado(true);
-      temporizadores.current.push(
-        window.setTimeout(() => setVolteado(false), GIRO_MS + REVERSO_MS),
-        window.setTimeout(() => {
-          const otra = window.open(href, '_blank', 'noopener');
-          // Si el navegador igual lo bloqueó, se va en la misma pestaña: lo
-          // que no puede pasar es que el clic no haga nada.
-          if (!otra) window.location.href = href;
-        }, ABRIR_MS),
-      );
+      abierto.current = false;
+      setGirando(true);
+      // Red de seguridad: si por lo que sea no llega el `animationend` —una
+      // pestaña en segundo plano, por ejemplo—, igual se abre. Que el clic no
+      // haga nada es el único resultado inaceptable.
+      red.current = window.setTimeout(abrir, GIRO_MS + 500);
     },
-    [href],
+    [abrir, girando],
   );
 
-  useEffect(
-    () => () => {
-      for (const id of temporizadores.current) window.clearTimeout(id);
-    },
-    [],
-  );
+  /** Terminó el giro: el cartel quedó donde empezó y recién ahí se abre. */
+  const alTerminarGiro = useCallback(() => {
+    setGirando(false);
+    abrir();
+  }, [abrir]);
+
+  useEffect(() => () => window.clearTimeout(red.current), []);
+
+  // ?slime=giro lanza el giro solo al cargar, para poder mirarlo en una
+  // captura sin tener que hacer clic. No abre Spotify: es para trabajar.
+  useEffect(() => {
+    if (bandera !== 'giro') return;
+    abierto.current = true;
+    const id = window.setTimeout(() => setGirando(true), 300);
+    return () => window.clearTimeout(id);
+  }, [bandera]);
 
   useEffect(() => {
     const canvas = lienzo.current;
@@ -271,7 +302,7 @@ export function BotonSlime({ href, children }: { href: string; children: string 
 
   return (
     <a
-      className={`btn-slime${volteado ? ' volteado' : ''}`}
+      className={`btn-slime${girando ? ' girando' : ''}`}
       href={href}
       target="_blank"
       rel="noreferrer"
@@ -298,7 +329,7 @@ export function BotonSlime({ href, children }: { href: string; children: string 
         </defs>
       </svg>
 
-      <span className="btn-slime-giro">
+      <span className="btn-slime-giro" onAnimationEnd={alTerminarGiro}>
         <span className="btn-slime-cara">
           <canvas ref={lienzo} className="btn-slime-lienzo" aria-hidden="true" />
           <span className="btn-slime-texto">{children}</span>

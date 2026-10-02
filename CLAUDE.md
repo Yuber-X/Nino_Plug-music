@@ -186,11 +186,17 @@ cliente:
   sumar radios daría una gota enorme de la nada. Algunas rebotan contra las
   paredes entre 1 y 3 veces (al azar). El color rota entre cuatro neones
   —verde, rojo, azul, amarillo— mezclándose, nunca saltando.
-- **Al hacer clic**, el botón gira sobre su eje **horizontal** (desde arriba,
-  no de costado: el cliente fue explícito), enseña el reverso blanco con
-  *Money One 1* en letras oscuras durante 1,5 s y vuelve solo. **Spotify se
-  abre recién cuando la vuelta terminó** (2,6 s): con la pestaña abriéndose al
-  instante, el efecto no se llegaba a ver.
+- **Al hacer clic**, el botón sale girando sobre su eje **horizontal** (desde
+  arriba, no de costado: el cliente fue explícito) como un cartel al que le
+  dispararon: **tres vueltas enteras**, enseñando una y otra vez el reverso
+  blanco con *Money One 1* y el frente, **perdiendo fuerza en cada vuelta**
+  hasta quedar quieto justo donde empezó (1080° = tres vueltas, así que el
+  final ES la posición de siempre y al quitar la clase no hay salto).
+  **Spotify se abre recién cuando el giro terminó** (2,6 s): con la pestaña
+  abriéndose al instante, el efecto no se llegaba a ver.
+  La curva del frenado no es la más abrupta a propósito: con un frenado muy
+  violento la primera vuelta es un borrón y las dos últimas se quedan casi
+  quietas de frente, así que el reverso pasa sin que se alcance a leer.
 
 Detalles que no se ven pero importan:
 
@@ -206,8 +212,16 @@ Detalles que no se ven pero importan:
   cuello saldría partido al medio.
 - El halo blanco va **después** del goo en la cadena de filtros
   (`filter:url(#slimeGoo) drop-shadow(...)`): antes, el umbral se lo comería.
-- `?slime` deja el efecto encendido sin mouse, para poder mirarlo en una
-  captura (el hover no se fotografía). Misma familia que `?entrar` y `?carga`.
+- ⚠ **`window.open(url, '_blank', 'noopener')` devuelve `null` SIEMPRE**, aunque
+  la pestaña se haya abierto perfecto — lo dice la especificación. Con la
+  comprobación "si devolvió null es que lo bloquearon", el botón abría la
+  pestaña nueva **y además** mandaba la actual a Spotify (reportado por el
+  cliente el 2026-10-02). La protección de `noopener` se consigue igual
+  anulando `opener` en la ventana devuelta, y así el valor vuelve a servir para
+  saber si de verdad la bloquearon.
+- `?slime` deja el efecto encendido sin mouse y `?slime=giro` lanza además el
+  giro al cargar, para poder mirarlos en una captura (el hover y el clic no se
+  fotografían). Misma familia que `?entrar` y `?carga`.
 - Sigue siendo un `<a>` de verdad: se abre en otra pestaña con el botón del
   medio, se copia la dirección y lo lee un lector de pantalla. La vuelta es
   decoración y nunca retrasa el clic.

@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 
 import { artista, temas } from '../datos/artista';
+import { BotonSlime } from '../componentes/BotonSlime';
 import { hayWebGL } from '../tres/webgl';
 import { FondoVideo } from './FondoVideo';
 
@@ -125,15 +126,10 @@ export function Hero({ entro }: { entro: boolean }) {
         Último sencillo · {ultimo.titulo} · {anio}
       </div>
 
+      {/* El botón con slime y vuelta de cartel (pedido 2026-10-02). El enlace
+          sigue siendo un <a> de verdad: la animación es decoración. */}
       <div className="hero-actions">
-        <a
-          className="btn btn-ghost"
-          href={artista.enlaces.spotify}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Ver Spotify
-        </a>
+        <BotonSlime href={artista.enlaces.spotify}>Ver Spotify</BotonSlime>
       </div>
 
       <div className="scroll-cue">

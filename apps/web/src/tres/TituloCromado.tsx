@@ -73,6 +73,32 @@ const GIRO_MAX_X = 0.05;   // ~3°
 /** Cuánto tarda una vuelta del paseo solo (modo celular), en segundos. */
 const RONDA = 14;
 
+/**
+ * El puntero, leído de la VENTANA y no del canvas.
+ *
+ * POR QUÉ: hasta el 2026-10-02 la inclinación usaba `estado.pointer`, que R3F
+ * calcula con los eventos del propio canvas. Eso ataba dos cosas que no tienen
+ * por qué ir juntas: para que el título siguiera al mouse, el canvas tenía que
+ * recibir eventos, y un canvas que recibe eventos es un rectángulo invisible
+ * que se come los clics de lo que tenga encima o al lado.
+ *
+ * Leyéndolo de la ventana, el canvas puede ser tan grande como haga falta —y
+ * va con pointer-events:none—, así que ya no corta nada ni tapa nada. De paso
+ * el título reacciona aunque el mouse esté sobre el botón.
+ */
+const puntero = { x: 0, y: 0 };
+
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      puntero.x = (e.clientX / window.innerWidth) * 2 - 1;
+      puntero.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    },
+    { passive: true },
+  );
+}
+
 /** ¿Pantalla táctil? Ahí el título no sigue al dedo: se pasea solo. */
 function esTactil(): boolean {
   if (typeof window === 'undefined') return false;
@@ -208,7 +234,14 @@ function Letras({ texto, entro }: Props) {
       const t = 1 - Math.pow(1 - giro.current, 3);
       m.rotation.y = t * Math.PI * 2;
       m.rotation.x = 0;
-      m.scale.setScalar(0.6 + t * 0.4);
+
+      // Durante la vuelta, las puntas del texto arqueado se acercan a la
+      // cámara y la perspectiva las agranda: ahí es donde se veía el corte y,
+      // con él, el rectángulo de la zona de interacción (reportado 2026-10-02).
+      // Se encoge un poco más justo cuando el texto está de canto, que es
+      // cuando más se asoma, y se recupera al quedar de frente.
+      const deCanto = Math.abs(Math.sin(m.rotation.y));
+      m.scale.setScalar((0.6 + t * 0.4) * (1 - deCanto * 0.22));
       return;
     }
 
@@ -222,9 +255,8 @@ function Letras({ texto, entro }: Props) {
       objetivoY = Math.sin(a) * GIRO_MAX_Y;
       objetivoX = Math.cos(a) * GIRO_MAX_X;
     } else {
-      const p = estado.pointer;
-      objetivoY = THREE.MathUtils.clamp(p.x * GIRO_MAX_Y * 1.1, -GIRO_MAX_Y, GIRO_MAX_Y);
-      objetivoX = THREE.MathUtils.clamp(-p.y * GIRO_MAX_X * 1.1, -GIRO_MAX_X, GIRO_MAX_X);
+      objetivoY = THREE.MathUtils.clamp(puntero.x * GIRO_MAX_Y * 1.1, -GIRO_MAX_Y, GIRO_MAX_Y);
+      objetivoX = THREE.MathUtils.clamp(-puntero.y * GIRO_MAX_X * 1.1, -GIRO_MAX_X, GIRO_MAX_X);
     }
 
     // Persigue el objetivo más despacio que antes: el tirón seco era parte de

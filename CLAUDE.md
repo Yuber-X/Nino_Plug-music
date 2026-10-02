@@ -172,6 +172,58 @@ canvas va con `pointer-events:none`, así el dedo siempre hace scroll.
 margen negativo. Con `100vw` el documento quedaba 48 px más ancho que la
 ventana y en celular se veía todo corrido hacia la derecha.
 
+
+## 2.6. El botón "Ver Spotify" (2026-10-02)
+
+`componentes/BotonSlime.tsx`. Dos cosas distintas, las dos pedidas por el
+cliente:
+
+- **Con el mouse encima**, del borde de abajo salen gotas que SUBEN y no
+  vuelven ("como si el viento se las llevara"), y abajo se acumula un charco de
+  superficie ondulada. Algunas gotas rebotan contra las paredes de adentro
+  entre 1 y 3 veces (al azar). El color rota entre cuatro neones —verde, rojo,
+  azul, amarillo— mezclándose, nunca saltando.
+- **Al hacer clic**, el botón gira sobre su eje **horizontal** (desde arriba,
+  no de costado: el cliente fue explícito), enseña el reverso blanco con
+  *Money One 1* en letras oscuras durante 1,5 s y vuelve solo.
+
+Detalles que no se ven pero importan:
+
+- El slime se dibuja en un `<canvas>`, no con `<div>`s: son hasta 70 gotas a la
+  vez y cada una como elemento del DOM obligaría a recalcular la maqueta 60
+  veces por segundo.
+- Las gotas se pintan con `globalCompositeOperation='lighter'` y `shadowBlur`.
+  Sin eso el color queda plano y no se lee como neón.
+- Sigue siendo un `<a>` de verdad: se abre en otra pestaña con el botón del
+  medio, se copia la dirección y lo lee un lector de pantalla. La vuelta es
+  decoración y nunca retrasa el clic.
+- Con `prefers-reduced-motion` no hay gotas ni vuelta.
+- **En celular no hay hover**, así que el slime no aparece; el toque sí da
+  vuelta el botón.
+
+## 2.7. La zona de interacción del título (2026-10-02)
+
+El cliente reportó que al entrar, cuando el título da su vuelta, "se nota la
+zona de interacción". Dos cambios:
+
+- **El puntero se lee de la VENTANA, no del canvas.** Antes la inclinación
+  usaba `estado.pointer`, que R3F calcula con los eventos del propio canvas:
+  eso ataba el seguimiento del mouse a que el canvas recibiera eventos, y un
+  canvas que recibe eventos es un rectángulo invisible que se come los clics de
+  lo que tenga encima. Ahora el canvas va con `pointer-events:none` en TODAS
+  las pantallas, puede ser tan grande como haga falta y el título reacciona
+  aunque el mouse esté sobre el botón.
+- **Durante la vuelta de entrada el texto se encoge un poco más** cuando está
+  de canto (`1 - |sin(rotación)| * 0.22`): ahí es donde las puntas del texto
+  arqueado se acercan a la cámara, la perspectiva las agranda y se veía el
+  corte contra el borde del canvas. El canvas además creció (hasta 1800 px de
+  ancho y 60vh de alto).
+
+El canvas entra por debajo de lo que sigue con un margen inferior negativo, y
+el relleno de la portada se achica en pantallas bajas: así el botón queda
+dentro de la pantalla en un portátil de 1366x768, que es lo que el cliente
+pidió el mismo día.
+
 ---
 
 ## 3. Sistema de diseño

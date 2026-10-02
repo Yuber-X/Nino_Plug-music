@@ -174,13 +174,18 @@ body::before{
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   text-align:center;
   --sangria:24px;
-  padding:150px var(--sangria) 96px;
+  /* El relleno se achica en pantallas bajas: con 150/96 fijos, en un portátil
+     de 1366x768 (con la barra del navegador, ~620 px útiles) el botón quedaba
+     pegado al filo de abajo (reportado 2026-10-02). */
+  padding:clamp(96px, 14vh, 150px) var(--sangria) clamp(56px, 9vh, 96px);
   background:
     radial-gradient(90% 60% at var(--mx,50%) var(--my,38%), var(--wine-900) 0%, transparent 60%),
     var(--surface-950);
   overflow:hidden;
 }
-@media(min-width:640px){ .hero{ --sangria:48px; padding:160px var(--sangria) 110px; } }
+@media(min-width:640px){
+  .hero{ --sangria:48px; padding:clamp(100px, 15vh, 160px) var(--sangria) clamp(60px, 10vh, 110px); }
+}
 .kicker{
   font-family:var(--font-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--wine-400); margin-bottom:20px;
@@ -380,15 +385,27 @@ footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-
      acá, así que el canvas medía 920 px con el texto al 92% adentro. De ahí
      venían las dos cosas que reportó el cliente el 2026-09-30: las letras del
      final cortadas y el recuadro de la zona de interacción a la vista. */
-  max-width:1600px;
+  max-width:1800px;
   /* Ancho de la portada MENOS su padding, y devuelto con margen negativo: así
      el canvas llega de borde a borde sin empujar la página. Con 100vw a secas
      el documento quedaba 48 px más ancho que la ventana y en celular todo se
      veía corrido hacia la derecha (2026-09-30). */
   width:calc(100% + var(--sangria) * 2);
   margin-inline:calc(var(--sangria) * -1);
-  height:clamp(340px, 54vh, 620px);
-  margin-bottom:4px;
+  height:clamp(380px, 60vh, 700px);
+  /* El canvas se mete por debajo de lo que sigue: adentro le sobra aire y así
+     el kicker y el botón suben a la zona visible de la pantalla sin achicar el
+     título (pedido 2026-10-02, "sube un poco el botón Ver Spotify"). */
+  margin-bottom:clamp(-110px, -8vh, -40px);
+}
+
+/* NINGÚN evento. El título sigue al mouse leyéndolo de la ventana
+   (TituloCromado), así que el canvas no necesita recibir nada — y al no
+   recibirlo deja de ser un rectángulo invisible que se come los clics del
+   botón que ahora queda encima. */
+.title-stage.title-3d,
+.title-stage.title-3d canvas{
+  pointer-events:none;
 }
 /* El resplandor del título.
    Va sobre el CANVAS y no sobre la sección: el canvas es transparente salvo
@@ -494,7 +511,77 @@ footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-
   .hero .title-stage{ order:2; }
   .hero .hero-actions{ order:3; margin-top:18px; }
   .title-stage.title-3d{ height:clamp(220px, 34vh, 340px); }
-  /* El título 3D no reacciona al toque: se pasea solo (lo maneja
-     TituloCromado). Sin eventos, además, el dedo siempre hace scroll. */
-  .title-stage.title-3d canvas{ pointer-events:none; }
+  /* (Los eventos ya están apagados para todas las pantallas más arriba.) */
+  .title-stage.title-3d{ margin-bottom:clamp(-70px, -5vh, -24px); }
+}
+
+/* ---------- el botón de slime (pedido del cliente, 2026-10-02) ----------
+   Dos caras y una vuelta sobre el eje HORIZONTAL: el cliente fue explícito en
+   que gira "desde arriba, no a los lados", como un cartel al que le disparan. */
+.btn-slime{
+  position:relative;
+  display:inline-block;
+  perspective:900px;          /* sin esto la vuelta se ve plana, sin volumen */
+  text-decoration:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.btn-slime-giro{
+  display:block;
+  position:relative;
+  transform-style:preserve-3d;
+  /* El golpe de ida es seco y el de vuelta también: es un cartel girando, no
+     una transición suave de interfaz. */
+  transition:transform .55s cubic-bezier(.6,-0.25,.3,1.3);
+}
+.btn-slime.volteado .btn-slime-giro{ transform:rotateX(180deg); }
+
+.btn-slime-cara{
+  display:flex; align-items:center; justify-content:center;
+  min-width:190px; padding:15px 28px;
+  font-family:var(--font-mono); font-size:12px; letter-spacing:.14em;
+  text-transform:uppercase; white-space:nowrap;
+  border:1px solid var(--line-strong);
+  backface-visibility:hidden;          /* o se ven las dos caras a la vez */
+  -webkit-backface-visibility:hidden;
+}
+
+/* La cara de adelante: la de siempre, con el lienzo del slime adentro. */
+.btn-slime .btn-slime-cara:first-child{
+  position:relative;
+  background:rgba(10,9,8,.35);
+  color:var(--bone-100);
+  overflow:hidden;                      /* el slime no se sale del botón */
+  transition:border-color .2s ease;
+}
+.btn-slime:hover .btn-slime-cara:first-child{ border-color:var(--bone-100); }
+
+.btn-slime-lienzo{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  pointer-events:none;
+}
+.btn-slime-texto{
+  position:relative; z-index:1;
+  /* El texto tiene que leerse POR ENCIMA del slime, que es brillante. */
+  text-shadow:0 1px 3px rgba(10,9,8,.95), 0 0 10px rgba(10,9,8,.8);
+}
+
+/* El reverso: blanco, con el nombre del sello en letras oscuras y brillantes.
+   Va girado 180° de antemano para quedar derecho cuando el botón se da vuelta. */
+.btn-slime-reverso{
+  position:absolute; inset:0;
+  transform:rotateX(180deg);
+  background:var(--bone-100);
+  color:#14100f;
+  font-weight:700; letter-spacing:.2em;
+  border-color:var(--bone-100);
+  text-shadow:0 0 12px rgba(255,255,255,.9), 0 0 24px rgba(194,58,82,.45);
+}
+
+/* Quien pidió menos movimiento: sin vuelta y sin slime (el lienzo ni se pinta,
+   lo decide el componente). */
+@media (prefers-reduced-motion: reduce){
+  .btn-slime-giro{ transition:none; }
+  .btn-slime.volteado .btn-slime-giro{ transform:none; }
 }

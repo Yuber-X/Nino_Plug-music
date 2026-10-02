@@ -5,24 +5,31 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  *
  * DOS COSAS DISTINTAS PASAN ACÁ:
  *
- *  1. CON EL MOUSE ENCIMA — del borde de abajo empiezan a salir gotas que
- *     SUBEN y nunca vuelven, "como si el viento se las llevara", y abajo se va
- *     acumulando un charco. Algunas gotas rebotan contra las paredes de
- *     adentro entre 1 y 3 veces antes de irse. El color va rotando entre
- *     cuatro neones: verde, rojo, azul y amarillo.
+ *  1. CON EL MOUSE ENCIMA — del charco de abajo se levantan gotas que SUBEN y
+ *     nunca vuelven, "como si el viento se las llevara". Las gotas no son
+ *     bolitas sueltas: se FUNDEN entre ellas y con el charco, con cuello y
+ *     todo, como en la referencia que mandó el cliente (`slime.jpg`). El color
+ *     va rotando entre cuatro neones: verde, rojo, azul y amarillo.
  *
  *  2. AL HACER CLIC — el botón se da vuelta como un cartel al que le
  *     dispararon: gira sobre su eje HORIZONTAL (desde arriba, no de costado),
- *     enseña el reverso —blanco, con el nombre del sello en letras oscuras—
- *     durante segundo y medio, y vuelve solo.
+ *     enseña el reverso —blanco, con el nombre del sello— durante segundo y
+ *     medio, vuelve, y RECIÉN AHÍ se abre Spotify (2026-10-02: con la pestaña
+ *     abriéndose al instante, la vuelta no se llegaba a ver).
+ *
+ * CÓMO SE FUNDEN LAS GOTAS. El canvas dibuja círculos sueltos; el efecto de
+ * fusión lo pone un filtro SVG ("goo"): desenfoca y después endurece el alfa
+ * con una feColorMatrix. Donde dos círculos desenfocados se tocan, la suma de
+ * alfas pasa el umbral y aparece el cuello que los une. Es el truco clásico de
+ * metaballs, y cuesta muchísimo menos que calcular una superficie implícita a
+ * 60 cuadros por segundo.
  *
  * El slime se dibuja en un <canvas> y no con elementos del DOM: son decenas de
  * gotas moviéndose a la vez, y cada una como <div> sería pedirle al navegador
  * que recalcule la maqueta sesenta veces por segundo.
  *
  * El enlace sigue siendo un <a> de verdad: se puede abrir en otra pestaña con
- * el botón del medio, copiar la dirección y leer con lector de pantalla. La
- * vuelta es decoración; el clic nunca se bloquea ni se demora.
+ * el botón del medio, copiar la dirección y leer con lector de pantalla.
  */
 
 /** Los cuatro neones del pedido, en el orden en que se van mezclando. */
@@ -38,6 +45,19 @@ const CICLO_COLOR = 7;
 
 /** Cuánto se queda el reverso a la vista, en milisegundos (pedido: 1,5 s). */
 const REVERSO_MS = 1500;
+
+/** Lo que tarda cada media vuelta del cartel. Igual que la transición del CSS. */
+const GIRO_MS = 550;
+
+/**
+ * Cuándo se abre Spotify: cuando el cartel ya volvió a su lado normal.
+ *
+ * Son 2,6 s desde el clic, dentro de los ~5 s que los navegadores consideran
+ * "activación reciente del usuario", así que `window.open` NO se bloquea como
+ * si fuera una ventana emergente. Pasado ese rato sí se bloquearía, y por eso
+ * hay un plan B que navega en la misma pestaña.
+ */
+const ABRIR_MS = GIRO_MS + REVERSO_MS + GIRO_MS;
 
 interface Gota {
   x: number;
@@ -62,18 +82,46 @@ function colorNeon(t: number, alfa: number): string {
 
 export function BotonSlime({ href, children }: { href: string; children: string }) {
   const lienzo = useRef<HTMLCanvasElement>(null);
-  const encima = useRef(false);
+  // ?slime deja el efecto encendido sin mouse. Es para trabajarlo y poder
+  // mirarlo en una captura —el hover no se puede fotografiar—, igual que
+  // ?entrar salta la puerta y ?carga congela la barra. En producción nadie
+  // llega con ese parámetro.
+  const encima = useRef(
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('slime'),
+  );
   const [volteado, setVolteado] = useState(false);
-  const temporizador = useRef<number | undefined>(undefined);
+  const temporizadores = useRef<number[]>([]);
 
-  const alHacerClic = useCallback(() => {
-    // El enlace abre igual: esto es solo la vuelta del cartel.
-    setVolteado(true);
-    window.clearTimeout(temporizador.current);
-    temporizador.current = window.setTimeout(() => setVolteado(false), REVERSO_MS);
-  }, []);
+  const alHacerClic = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      // Con Ctrl/Cmd/medio el visitante pidió otra cosa (abrir aparte, guardar):
+      // ahí no se interrumpe nada, se deja al navegador hacer lo suyo.
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
 
-  useEffect(() => () => window.clearTimeout(temporizador.current), []);
+      e.preventDefault();
+      for (const id of temporizadores.current) window.clearTimeout(id);
+      temporizadores.current = [];
+
+      setVolteado(true);
+      temporizadores.current.push(
+        window.setTimeout(() => setVolteado(false), GIRO_MS + REVERSO_MS),
+        window.setTimeout(() => {
+          const otra = window.open(href, '_blank', 'noopener');
+          // Si el navegador igual lo bloqueó, se va en la misma pestaña: lo
+          // que no puede pasar es que el clic no haga nada.
+          if (!otra) window.location.href = href;
+        }, ABRIR_MS),
+      );
+    },
+    [href],
+  );
+
+  useEffect(
+    () => () => {
+      for (const id of temporizadores.current) window.clearTimeout(id);
+    },
+    [],
+  );
 
   useEffect(() => {
     const canvas = lienzo.current;
@@ -108,11 +156,15 @@ export function BotonSlime({ href, children }: { href: string; children: string 
 
     const nacer = (t: number): Gota => ({
       x: 6 + Math.random() * Math.max(1, ancho - 12),
-      y: alto - charco * 0.5,
+      y: alto - charco * 0.6,
       // Sube siempre; el "viento" es la deriva lateral, que cambia por gota.
-      vx: (Math.random() - 0.5) * 26,
-      vy: -(24 + Math.random() * 54),
-      radio: 1.6 + Math.random() * 5.4,
+      // Despacio (2026-10-02): a la velocidad anterior las gotas cruzaban el
+      // botón antes de alcanzar a fundirse con nadie.
+      vx: (Math.random() - 0.5) * 14,
+      vy: -(9 + Math.random() * 20),
+      // Gordas: dos gotas finas nunca llegan a tocarse y el filtro no tiene
+      // qué unir. El tamaño es lo que hace que se vean los cuellos.
+      radio: 3.4 + Math.random() * 6.2,
       // 0 a 3 rebotes: el que sale con 0 se va derecho.
       rebotes: Math.floor(Math.random() * 4),
       tono: t,
@@ -124,10 +176,17 @@ export function BotonSlime({ href, children }: { href: string; children: string 
       const t = ahora / 1000 / CICLO_COLOR;
 
       ctx.clearRect(0, 0, ancho, alto);
+      // Un solo color por cuadro: el filtro de fusión necesita que todo lo que
+      // se toca sea del mismo tono, o el cuello se vería de dos colores.
+      const tinta = colorNeon(t, 1);
 
       // --- el charco: sube mientras el mouse está encima, baja al salir ---
-      const techo = alto * 0.55;
-      charco += ((encima.current ? techo : 0) - charco) * Math.min(1, dt * (encima.current ? 2.6 : 4.5));
+      // Más bajo que la mitad a propósito: con el charco muy alto las gotas
+      // nacen dentro de él y se funden sin llegar a verse subir.
+      const techo = alto * 0.42;
+      charco += ((encima.current ? techo : 0) - charco) * Math.min(1, dt * (encima.current ? 2 : 4));
+
+      ctx.fillStyle = tinta;
 
       if (charco > 0.5) {
         ctx.beginPath();
@@ -136,44 +195,23 @@ export function BotonSlime({ href, children }: { href: string; children: string 
         // La superficie ondea: sin esto parece una barra de progreso.
         for (let x = 0; x <= ancho; x += 6) {
           const onda =
-            Math.sin(x / 26 + ahora / 320) * 2.6 + Math.sin(x / 11 - ahora / 210) * 1.4;
+            Math.sin(x / 26 + ahora / 520) * 2.4 + Math.sin(x / 11 - ahora / 340) * 1.2;
           ctx.lineTo(x, alto - charco + onda);
         }
         ctx.lineTo(ancho, alto);
         ctx.closePath();
-        // El halo es lo que hace que se lea como NEÓN y no como pintura: sin
-        // él el color queda plano sobre el fondo oscuro.
-        ctx.shadowBlur = 18;
-        ctx.shadowColor = colorNeon(t, 0.9);
-        ctx.fillStyle = colorNeon(t, 0.85);
         ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Cresta clara: le da el brillo mojado del slime.
-        ctx.beginPath();
-        for (let x = 0; x <= ancho; x += 6) {
-          const onda =
-            Math.sin(x / 26 + ahora / 320) * 2.6 + Math.sin(x / 11 - ahora / 210) * 1.4;
-          if (x === 0) ctx.moveTo(x, alto - charco + onda);
-          else ctx.lineTo(x, alto - charco + onda);
-        }
-        ctx.strokeStyle = 'rgba(255,255,255,.55)';
-        ctx.lineWidth = 1.6;
-        ctx.stroke();
       }
 
       // --- nacen gotas mientras haya mouse encima ---
-      if (encima.current && gotas.length < 70) {
-        // Varias por cuadro: con una sola el borde se veía vacío al principio.
-        const cuantas = Math.random() < dt * 58 ? 2 : Math.random() < dt * 40 ? 1 : 0;
-        for (let n = 0; n < cuantas; n++) gotas.push(nacer(t));
-      }
+      if (encima.current && gotas.length < 30 && Math.random() < dt * 16)
+        gotas.push(nacer(t));
 
-      // --- suben, rebotan y se van ---
+      // --- suben, chocan, se funden y se van ---
       for (let k = gotas.length - 1; k >= 0; k--) {
         const g = gotas[k];
         // Aire que empuja hacia arriba: la gota ACELERA, no cae.
-        g.vy -= 26 * dt;
+        g.vy -= 7 * dt;
         g.x += g.vx * dt;
         g.y += g.vy * dt;
 
@@ -186,26 +224,39 @@ export function BotonSlime({ href, children }: { href: string; children: string 
         }
 
         // Se fue por arriba: no vuelve nunca (pedido del cliente).
-        if (g.y + g.radio < -4) {
+        if (g.y + g.radio < -6) {
           gotas.splice(k, 1);
           continue;
         }
 
-        // Se apaga a medida que sube: la que llega arriba ya casi no se ve.
-        const desvanece = Math.min(1, Math.max(0, (g.y + g.radio) / Math.max(1, alto)));
-        const color = colorNeon(g.tono + (t - g.tono) * 0.5, 0.45 + desvanece * 0.5);
+        // CHOQUE: si dos se solapan de verdad, se hacen UNA sola más gorda
+        // (pedido del cliente, 2026-10-02). El radio nuevo conserva el área —
+        // √(r₁² + r₂²)— porque sumar los radios daría una gota enorme de la
+        // nada, y la velocidad se promedia pesada por tamaño, que es lo que
+        // haría un choque de verdad.
+        for (let j = k - 1; j >= 0; j--) {
+          const o = gotas[j];
+          const dx = o.x - g.x;
+          const dy = o.y - g.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist >= (g.radio + o.radio) * 0.65) continue;
 
-        // 'lighter' suma luz donde las gotas se cruzan, que es exactamente lo
-        // que hace un neón de verdad.
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = color;
+          const pesoG = g.radio * g.radio;
+          const pesoO = o.radio * o.radio;
+          const total = pesoG + pesoO;
+          o.x = (g.x * pesoG + o.x * pesoO) / total;
+          o.y = (g.y * pesoG + o.y * pesoO) / total;
+          o.vx = (g.vx * pesoG + o.vx * pesoO) / total;
+          o.vy = (g.vy * pesoG + o.vy * pesoO) / total;
+          o.radio = Math.min(11, Math.sqrt(total));
+          gotas.splice(k, 1);
+          break;
+        }
+        if (!gotas.includes(g)) continue;
+
         ctx.beginPath();
         ctx.arc(g.x, g.y, g.radio, 0, Math.PI * 2);
-        ctx.fillStyle = color;
         ctx.fill();
-        ctx.shadowBlur = 0;
-        ctx.globalCompositeOperation = 'source-over';
       }
 
       cuadro = requestAnimationFrame(paso);
@@ -228,6 +279,25 @@ export function BotonSlime({ href, children }: { href: string; children: string 
       onPointerLeave={() => (encima.current = false)}
       onClick={alHacerClic}
     >
+      {/* El filtro que funde las gotas. Va una sola vez, escondido: un SVG de
+          0x0 no ocupa lugar ni se lee en voz alta. */}
+      <svg width="0" height="0" aria-hidden="true" focusable="false" className="btn-slime-filtro">
+        <defs>
+          <filter id="slimeGoo">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="borroso" />
+            {/* Endurece el alfa: lo que quedó medio transparente por el
+                desenfoque pasa a opaco o desaparece. Ahí nacen los cuellos. */}
+            <feColorMatrix
+              in="borroso"
+              mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9"
+              result="goo"
+            />
+            <feBlend in="SourceGraphic" in2="goo" />
+          </filter>
+        </defs>
+      </svg>
+
       <span className="btn-slime-giro">
         <span className="btn-slime-cara">
           <canvas ref={lienzo} className="btn-slime-lienzo" aria-hidden="true" />

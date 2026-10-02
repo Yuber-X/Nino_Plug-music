@@ -178,22 +178,36 @@ ventana y en celular se veía todo corrido hacia la derecha.
 `componentes/BotonSlime.tsx`. Dos cosas distintas, las dos pedidas por el
 cliente:
 
-- **Con el mouse encima**, del borde de abajo salen gotas que SUBEN y no
-  vuelven ("como si el viento se las llevara"), y abajo se acumula un charco de
-  superficie ondulada. Algunas gotas rebotan contra las paredes de adentro
-  entre 1 y 3 veces (al azar). El color rota entre cuatro neones —verde, rojo,
-  azul, amarillo— mezclándose, nunca saltando.
+- **Con el mouse encima**, del charco de abajo se levantan gotas que SUBEN y no
+  vuelven ("como si el viento se las llevara"). Las gotas **se funden** entre
+  ellas y con el charco, con cuello y todo — la referencia que mandó el cliente
+  es `slime.jpg` (2026-10-02), un metaball clásico. Al chocar, dos gotas se
+  hacen UNA más gorda: el radio nuevo conserva el área (√(r₁²+r₂²)), porque
+  sumar radios daría una gota enorme de la nada. Algunas rebotan contra las
+  paredes entre 1 y 3 veces (al azar). El color rota entre cuatro neones
+  —verde, rojo, azul, amarillo— mezclándose, nunca saltando.
 - **Al hacer clic**, el botón gira sobre su eje **horizontal** (desde arriba,
   no de costado: el cliente fue explícito), enseña el reverso blanco con
-  *Money One 1* en letras oscuras durante 1,5 s y vuelve solo.
+  *Money One 1* en letras oscuras durante 1,5 s y vuelve solo. **Spotify se
+  abre recién cuando la vuelta terminó** (2,6 s): con la pestaña abriéndose al
+  instante, el efecto no se llegaba a ver.
 
 Detalles que no se ven pero importan:
 
-- El slime se dibuja en un `<canvas>`, no con `<div>`s: son hasta 70 gotas a la
-  vez y cada una como elemento del DOM obligaría a recalcular la maqueta 60
+- El slime se dibuja en un `<canvas>`, no con `<div>`s: son decenas de gotas a
+  la vez y cada una como elemento del DOM obligaría a recalcular la maqueta 60
   veces por segundo.
-- Las gotas se pintan con `globalCompositeOperation='lighter'` y `shadowBlur`.
-  Sin eso el color queda plano y no se lee como neón.
+- **La fusión la hace un filtro SVG** (`#slimeGoo`), no el canvas: desenfoca y
+  después endurece el alfa con una `feColorMatrix`. Donde dos círculos
+  desenfocados se tocan, la suma de alfas pasa el umbral y aparece el cuello
+  que los une. Es el truco clásico de metaballs y cuesta muchísimo menos que
+  calcular la superficie implícita en cada cuadro.
+- Por eso todo lo que se toca se pinta **del mismo color**: con dos tonos, el
+  cuello saldría partido al medio.
+- El halo blanco va **después** del goo en la cadena de filtros
+  (`filter:url(#slimeGoo) drop-shadow(...)`): antes, el umbral se lo comería.
+- `?slime` deja el efecto encendido sin mouse, para poder mirarlo en una
+  captura (el hover no se fotografía). Misma familia que `?entrar` y `?carga`.
 - Sigue siendo un `<a>` de verdad: se abre en otra pestaña con el botón del
   medio, se copia la dirección y lo lee un lector de pantalla. La vuelta es
   decoración y nunca retrasa el clic.

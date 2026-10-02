@@ -560,7 +560,14 @@ footer{ background:var(--surface-900); padding:64px 0 calc(96px + env(safe-area-
   position:absolute; inset:0;
   width:100%; height:100%;
   pointer-events:none;
+  /* El filtro que funde las gotas entre sí y con el charco (metaballs). El
+     halo blanco va DESPUÉS: si fuera antes, el umbral del goo se lo comería.
+     Pintado sobre el color neón, ese halo es lo que lo deja "mojado". */
+  filter:url(#slimeGoo) drop-shadow(0 0 7px rgba(255,255,255,.32));
 }
+
+/* El <svg> del filtro no ocupa lugar ni empuja nada. */
+.btn-slime-filtro{ position:absolute; width:0; height:0; }
 .btn-slime-texto{
   position:relative; z-index:1;
   /* El texto tiene que leerse POR ENCIMA del slime, que es brillante. */
